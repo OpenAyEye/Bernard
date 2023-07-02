@@ -6,3 +6,4 @@ boto3
 pydub
 SpeechRecognition
 python_dotenv
+pyaudio
