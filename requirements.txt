@@ -1,0 +1,8 @@
+openai==0.27.0
+requests
+tenacity
+termcolor
+boto3
+pydub
+SpeechRecognition
+python_dotenv
