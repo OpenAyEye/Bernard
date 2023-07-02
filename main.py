@@ -87,7 +87,7 @@ def get_microphone_input():
         user_input = recognizer.recognize_google(audio)
         return user_input
     except sr.UnknownValueError:
-        print("Sorry, I didn't catch that.")
+       # print("Sorry, I didn't catch that.")
         return ""
     except sr.RequestError:
         print("Sorry, I'm unable to access the speech recognition service.")
@@ -205,17 +205,18 @@ def main():
 
     while True:
         user_input = get_microphone_input()
-        print("User: " + user_input)
+
         if "quit" in user_input.lower():
             break
 
         user_message = {"role": "user", "content": user_input}
         conversation.append(user_message)
         if "Bernard" in user_input:
+            print("User: " + user_input)
             intent = user_input_intent_detection(user_input)
         else:
             intent = "invalid"
-        print(f"Intent: {intent}")  # Add this line to inspect the intent variable
+        #print(f"Intent: {intent}")  # Add this line to inspect the intent variable
 
         if "Intent" in intent and intent["Intent"] == "exit":
             break
@@ -233,41 +234,9 @@ def main():
             print(command_to_execute)
             subprocess.Popen(command_to_execute, shell=True)
         else:
-            print("Invalid intent.")
+           # print("Invalid intent.")
+            nilly = None
 
-def main_bak():
-    conversation = [
-        {"role": "system", "content": "You are starting a new conversation."},
-        {"role": "system", "content": "You can ask questions or provide instructions."},
-    ]
-
-    while True:
-        #user_input = input("User: ")
-        user_input = get_microphone_input()
-        if "quit" in user_input.lower():
-            break
-
-        user_message = {"role": "user", "content": user_input}
-        conversation.append(user_message)
-
-        intent = user_input_intent_detection(user_input)
-        if intent["Intent"] == "exit":
-            break
-        elif intent["Intent"] in ["question", "task"]:
-            response = chat_completion_request(conversation)
-            if response.status_code == 200:
-                data = response.json()
-                assistant_reply = data["choices"][0]["message"]["content"]
-                conversation.append({"role": "assistant", "content": assistant_reply})
-                pretty_print_conversation(conversation)
-            else:
-                print("Chat completion request failed. :(")
-        elif intent["Intent"] == "command":
-            command_to_execute = command_handle(user_input)
-            print(command_to_execute)
-            subprocess.Popen(command_to_execute, shell=True)
-        else:
-            print("Invalid intent.")
 
 if __name__ == "__main__":
     main()
