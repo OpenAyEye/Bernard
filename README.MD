@@ -8,7 +8,7 @@ We use the new GPT3.5 turbo 0613 function calls to parse responses in a way that
 
 Before running Bernard, make sure you have the following:
 
-- Python 3.x installed on your system.
+- Python 3.11 installed on your system.
 - An OpenAI API key to access the GPT3.5 turbo model.
 - AWS Polly API credentials for text-to-speech functionality.
 
@@ -30,7 +30,7 @@ To set up your AWS Polly API credentials as environment variables, follow these 
 4. Obtain the Access Key ID and Secret Access Key for the IAM user.
 5. Set the following environment variables:
 
-```bash
+```
 AWS_ACCESS_KEY_ID=<your-access-key-id>
 AWS_SECRET_ACCESS_KEY=<your-secret-access-key>
 AWS_DEFAULT_REGION=<your-preferred-region>
@@ -39,19 +39,19 @@ AWS_DEFAULT_REGION=<your-preferred-region>
 
 Clone the Bernard repository:
 
-```
+```bash
 git clone https://github.com/OpenAyEye/Bernard.git
 ```
 
 Navigate to the project directory:
 
-```
+```bash
 cd Bernard
 ```
 
 Install the required dependencies using pip:
 
-```
+```bash
 pip install -r requirements.txt
 ```
 
@@ -67,7 +67,7 @@ Ensure that your AWS Polly API credentials are properly set as environment varia
 
 Run the Bernard chatbot:
 
-```
+```bash
 python main.py
 ```
 
