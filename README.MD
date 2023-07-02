@@ -1,4 +1,4 @@
-# Bernard Chatbot
+# Bernard: A helpful Assistant 
 
 Bernard is a GPT-based chatbot with the ability to run commands from the command line to start programs that have been set up in the environment variables.
 
