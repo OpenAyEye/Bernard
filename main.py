@@ -75,6 +75,8 @@ def convert_text_to_speech(text):
 
     # Play the audio
     play(audio)
+    # Delete the MP3 file
+    os.remove("assistant_response.mp3")
 def get_microphone_input():
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
