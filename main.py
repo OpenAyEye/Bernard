@@ -209,7 +209,7 @@ def main():
 
         user_message = {"role": "user", "content": user_input}
         conversation.append(user_message)
-        if "computer" in user_input:
+        if "Bernard" in user_input:
             intent = user_input_intent_detection(user_input)
         else:
             intent = "invalid"
