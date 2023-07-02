@@ -53,7 +53,10 @@ functions = [
                 "cmd_line": {
                     "type": "string",
                     "description": "The proper command line input with arguments to start the requested application "
-                                   "or program. Response should include ONLY THE COMMAND LINE. ie: user input = 'open "
+                                   "or program. Response should include ONLY THE COMMAND LINE. rememember, windows "
+                                   "does not have an 'open' command. there is a 'start' command, as well as './' option "
+                                   "for running bat scripts or exe's; but no 'open' command exists, when you feel like "
+                                   "using 'open' use 'start' instead. ie: user input = 'open"
                                    "paint' gpt response = 'start mspaint' nothing else, the only text produced should "
                                    "be the command line input including any needed arguments."
                 }
