@@ -34,7 +34,12 @@ functions = [
             "properties": {
                 "Intent": {
                     "type": "string",
-                    "description": "The intent of the user input. you must classify the user input as one of the following one word responses: 'question', 'task', 'command', 'exit', do not make up new classifications of intent. If you're being asked to create something, ie: write a poem, or a story, or a haiku, those would classify as 'tasks'. classify the user input respectively if the user content is a question, a task request, a computer command, or a call to exit."
+                    "description": "The intent of the user input. you must classify the user input as one of the "
+                                   "following one word responses: 'question', 'task', 'command', 'exit', do not make "
+                                   "up new classifications of intent. If you're being asked to create something, "
+                                   "ie: write a poem, or a story, or a haiku, those would classify as 'tasks'. "
+                                   "classify the user input respectively if the user content is a question, "
+                                   "a task request, a computer command, or a call to exit."
                 }
             }
         }
@@ -102,7 +107,12 @@ def user_input_intent_detection(user_input):
             },
             {
                 "role": "user",
-                "content": f"classify the following as one of, and only one of the following, 'question', 'task', 'command', or 'exit'. do not make up new classifications, the follwing must fit into one of those four categories. 'commands' are references to computer applications, 'questions' are questions, 'tasks' are any content you are asked to generate, and 'exit' is any request to exit or quit the program. here is the user input: {user_input}"
+                "content": f"classify the following as one of, and only one of the following, 'question', 'task', "
+                           f"'command', or 'exit'. do not make up new classifications, the follwing must fit into one "
+                           f"of those four categories. 'commands' are references to computer applications, "
+                           f"'questions' are questions, 'tasks' are any content you are asked to generate, "
+                           f"and 'exit' is any request to exit or quit the program. here is the user input: "
+                           f"{user_input}"
             }
         ],
         functions=functions,
@@ -235,7 +245,7 @@ def main():
             subprocess.Popen(command_to_execute, shell=True)
         else:
            # print("Invalid intent.")
-            nilly = None
+            nilly = None  # this just satisfies the else:'s need for and indentation
 
 
 if __name__ == "__main__":
