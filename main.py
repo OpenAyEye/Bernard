@@ -1,9 +1,10 @@
 import json
+
+import EdgeGPT.EdgeGPT
 import openai
 import requests
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 from termcolor import colored
-#import keyfile
 import subprocess
 import speech_recognition as sr
 import boto3
@@ -11,6 +12,9 @@ from pydub import AudioSegment
 from pydub.playback import play
 import os
 from dotenv import load_dotenv
+from EdgeGPT.EdgeGPT import Chatbot
+from EdgeGPT import conversation_style
+import re
 
 # Set up AWS Polly client
 polly_client = boto3.client("polly", region_name="us-west-2")
@@ -24,6 +28,7 @@ load_dotenv("config.env")
 
 # Access the OpenAI key from the environment variable
 openai.api_key = os.environ.get("OpenAiKey")
+bing_u_cookie = os.environ.get("bing_u_cookie")
 
 functions = [
     {
@@ -65,6 +70,29 @@ functions = [
     }
 ]
 
+
+async def bing_chat(user_input):
+    user_input = user_input.replace('Bernard', '')
+    print("Binging it")
+    bot = await EdgeGPT.EdgeGPT.Chatbot.create()
+    response = await bot.ask(prompt=user_input, conversation_style=conversation_style.ConversationStyle.precise,
+                             simplify_response=True)
+    """
+{
+    "text": str,
+    "author": str,
+    "sources": list[dict],
+    "sources_text": str,
+    "suggestions": list[str],
+    "messages_left": int
+}
+    """
+    bot_response = (response["text"])
+
+
+    bot_response = re.sub('\[\^\d+\^\]', '', bot_response)
+    return bot_response
+    await bot.close()
 def convert_text_to_speech(text):
     response = polly_client.synthesize_speech(
         Text=text,
@@ -210,7 +238,7 @@ def pretty_print_conversation(messages):
         response_content = assistant_reply.replace("assistant:", "").strip()
         convert_text_to_speech(response_content)
 
-def main():
+async def main():
     conversation = [
         {"role": "system", "content": "You are starting a new conversation."},
         {"role": "system", "content": "You can ask questions or provide instructions."},
@@ -233,15 +261,39 @@ def main():
 
         if "Intent" in intent and intent["Intent"] == "exit":
             break
-        elif "Intent" in intent and intent["Intent"] in ["question", "task"]:
+        elif "Intent" in intent and intent["Intent"] in ["task"]:
             response = chat_completion_request(conversation)
             if response.status_code == 200:
                 data = response.json()
                 assistant_reply = data["choices"][0]["message"]["content"]
                 conversation.append({"role": "assistant", "content": assistant_reply})
                 pretty_print_conversation(conversation)
-            else:
-                print("Chat completion request failed.")
+            #Need to look at how the bing response is structured...
+        elif "Intent" in intent and intent["Intent"] in ["question"]:
+            print(user_input)
+            user_input = user_input.replace('Bernard', '')
+            bot = await EdgeGPT.EdgeGPT.Chatbot.create()
+            response = await bot.ask(prompt=user_input, conversation_style=conversation_style.ConversationStyle.precise, simplify_response=True)
+            """
+        {
+            "text": str,
+            "author": str,
+            "sources": list[dict],
+            "sources_text": str,
+            "suggestions": list[str],
+            "messages_left": int
+        }
+            """
+            bot_response=(response["text"])
+            await bot.close()
+
+            bot_response = re.sub('\[\^\d+\^\]', '', bot_response)
+            #bot_response = bing_chat(user_input)
+            assistant_reply = bot_response
+            conversation.append({"role": "assistant", "content": assistant_reply})
+            pretty_print_conversation(conversation)
+
+
         elif "Intent" in intent and intent["Intent"] == "command":
             command_to_execute = command_handle(user_input)
             print(command_to_execute)
@@ -252,4 +304,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
+#   sys.exit(0)

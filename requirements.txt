@@ -1,9 +1,11 @@
 openai==0.27.0
-requests
-tenacity
-termcolor
-boto3
-pydub
+requests~=2.31.0
+tenacity~=8.2.2
+termcolor~=2.3.0
+boto3~=1.26.165
+pydub~=0.25.1
 SpeechRecognition
 python_dotenv
-pyaudio
+pyaudio~=0.2.13
+python-dotenv~=1.0.0
+EdgeGPT~=0.12.0
