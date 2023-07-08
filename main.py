@@ -1,5 +1,4 @@
 import json
-
 import EdgeGPT.EdgeGPT
 import openai
 import requests
@@ -14,9 +13,6 @@ import os
 from dotenv import load_dotenv
 from EdgeGPT.EdgeGPT import Chatbot
 from EdgeGPT import conversation_style
-#from EdgeGPT.EdgeUtils import Cookie
-#Cookie.dir_path = "cookies.json"
-
 import re
 
 # Set up AWS Polly client
@@ -31,7 +27,7 @@ load_dotenv("config.env")
 
 # Access the OpenAI key from the environment variable
 openai.api_key = os.environ.get("OpenAiKey")
-bing_u_cookie = os.environ.get("bing_u_cookie")
+#bing_u_cookie = os.environ.get("bing_u_cookie")
 
 functions = [
     {
@@ -43,10 +39,10 @@ functions = [
                 "Intent": {
                     "type": "string",
                     "description": "The intent of the user input. you must classify the user input as one of the "
-                                   "following one word responses: 'question', 'task', 'command', 'exit', do not make "
+                                   "following one word responses:'internet', 'question', 'task', 'command', 'exit', do not make "
                                    "up new classifications of intent. If you're being asked to create something, "
                                    "ie: write a poem, or a story, or a haiku, those would classify as 'tasks'. "
-                                   "classify the user input respectively if the user content is a question, "
+                                   "classify the user input respectively if the user content is an internet, question, "
                                    "a task request, a computer command, or a call to exit."
                 }
             }
@@ -142,12 +138,17 @@ def user_input_intent_detection(user_input):
             },
             {
                 "role": "user",
-                "content": f"classify the following as one of, and only one of the following, 'question', 'task', "
-                           f"'command', or 'exit'. do not make up new classifications, the follwing must fit into one "
-                           f"of those four categories. 'commands' are references to computer applications, "
-                           f"'questions' are questions, 'tasks' are any content you are asked to generate, "
-                           f"and 'exit' is any request to exit or quit the program. here is the user input: "
-                           f"{user_input}"
+                "content": f"classify the following as one of, and only one of the following, 'internet', 'question', "
+                           f"'task','command', or 'exit'. do not make up new classifications, the following must fit"
+                           f" into one of those five categories. 'commands' are references to computer applications, "
+                           f"'internet' would be any prompt that would require internet access to answer, only if "
+                           f"internet is actually required. Do not use 'internet' for general questions - only things "
+                           f"like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv.' "
+                           f"things like this, requests for current events/ information. Questions about "
+                           f"history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc"
+                           f"should be classified as 'questions' are questions, 'tasks' are any content you are asked "
+                           f"to generate, and 'exit' is any request to exit or quit the program. here is the user "
+                           f"input: {user_input}"
             }
         ],
         functions=functions,
@@ -159,7 +160,6 @@ def user_input_intent_detection(user_input):
     arguments = response["choices"][0]["message"]["function_call"]["arguments"]
     print(arguments)
     json_obj = json.loads(arguments)
-
     return json_obj
 
 
@@ -182,11 +182,8 @@ def command_handle(user_input):
             "name": functions[1]["name"]
         }
     )
-
     arguments = response["choices"][0]["message"]["function_call"]["arguments"]
-    #print(arguments)
     json_obj = json.loads(arguments)
-
     return json_obj["cmd_line"]
 
 
@@ -261,37 +258,19 @@ async def main():
             intent = user_input_intent_detection(user_input)
         else:
             intent = "invalid"
-        #print(f"Intent: {intent}")  # Add this line to inspect the intent variable
+
 
         if "Intent" in intent and intent["Intent"] == "exit":
             break
-        elif "Intent" in intent and intent["Intent"] in ["task"]:
+        elif "Intent" in intent and intent["Intent"] in ["task", "question"]:
             response = chat_completion_request(conversation)
             if response.status_code == 200:
                 data = response.json()
                 assistant_reply = data["choices"][0]["message"]["content"]
                 conversation.append({"role": "assistant", "content": assistant_reply})
                 pretty_print_conversation(conversation)
-            #Need to look at how the bing response is structured...
-        elif "Intent" in intent and intent["Intent"] in ["question"]:
-            #print(user_input)
-         #   user_input = user_input.replace('Bernard', '')
-            #bot = await EdgeGPT.EdgeGPT.Chatbot.create()
-            #response = await bot.ask(prompt=user_input, conversation_style=conversation_style.ConversationStyle.precise, simplify_response=True)
-        #    """
-        #{
-        #    "text": str,
-        #    "author": str,
-        #    "sources": list[dict],
-        #    "sources_text": str,
-        #    "suggestions": list[str],
-        #    "messages_left": int
-        #}
-          #  """
-            #bot_response=(response["text"])
-            #await bot.close()
 
-            #bot_response = re.sub('\[\^\d+\^\]', '', bot_response)
+        elif "Intent" in intent and intent["Intent"] in ["internet"]:
             bot_response = await bing_chat(user_input)
             assistant_reply = bot_response
             conversation.append({"role": "assistant", "content": assistant_reply})
@@ -303,7 +282,7 @@ async def main():
             print(command_to_execute)
             subprocess.Popen(command_to_execute, shell=True)
         else:
-           # print("Invalid intent.")
+            #print("Invalid intent.")
             nilly = None  # this just satisfies the else:'s need for and indentation
 
 
