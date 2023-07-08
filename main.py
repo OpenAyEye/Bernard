@@ -14,6 +14,9 @@ import os
 from dotenv import load_dotenv
 from EdgeGPT.EdgeGPT import Chatbot
 from EdgeGPT import conversation_style
+#from EdgeGPT.EdgeUtils import Cookie
+#Cookie.dir_path = "cookies.json"
+
 import re
 
 # Set up AWS Polly client
@@ -89,10 +92,11 @@ async def bing_chat(user_input):
     """
     bot_response = (response["text"])
 
-
-    bot_response = re.sub('\[\^\d+\^\]', '', bot_response)
-    return bot_response
     await bot.close()
+    bot_response = re.sub('\[\^\d+\^\]', '', bot_response)
+
+    return bot_response
+
 def convert_text_to_speech(text):
     response = polly_client.synthesize_speech(
         Text=text,
@@ -270,25 +274,25 @@ async def main():
                 pretty_print_conversation(conversation)
             #Need to look at how the bing response is structured...
         elif "Intent" in intent and intent["Intent"] in ["question"]:
-            print(user_input)
-            user_input = user_input.replace('Bernard', '')
-            bot = await EdgeGPT.EdgeGPT.Chatbot.create()
-            response = await bot.ask(prompt=user_input, conversation_style=conversation_style.ConversationStyle.precise, simplify_response=True)
-            """
-        {
-            "text": str,
-            "author": str,
-            "sources": list[dict],
-            "sources_text": str,
-            "suggestions": list[str],
-            "messages_left": int
-        }
-            """
-            bot_response=(response["text"])
-            await bot.close()
+            #print(user_input)
+         #   user_input = user_input.replace('Bernard', '')
+            #bot = await EdgeGPT.EdgeGPT.Chatbot.create()
+            #response = await bot.ask(prompt=user_input, conversation_style=conversation_style.ConversationStyle.precise, simplify_response=True)
+        #    """
+        #{
+        #    "text": str,
+        #    "author": str,
+        #    "sources": list[dict],
+        #    "sources_text": str,
+        #    "suggestions": list[str],
+        #    "messages_left": int
+        #}
+          #  """
+            #bot_response=(response["text"])
+            #await bot.close()
 
-            bot_response = re.sub('\[\^\d+\^\]', '', bot_response)
-            #bot_response = bing_chat(user_input)
+            #bot_response = re.sub('\[\^\d+\^\]', '', bot_response)
+            bot_response = await bing_chat(user_input)
             assistant_reply = bot_response
             conversation.append({"role": "assistant", "content": assistant_reply})
             pretty_print_conversation(conversation)
