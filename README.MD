@@ -11,6 +11,7 @@ Before running Bernard, make sure you have the following:
 - Python 3.11 installed on your system.
 - An OpenAI API key to access the GPT3.5 turbo model.
 - AWS Polly API credentials for text-to-speech functionality.
+- Microsoft Bing Chat Cookies.json
 
 ### OpenAI API Key
 
@@ -35,7 +36,42 @@ AWS_ACCESS_KEY_ID=<your-access-key-id>
 AWS_SECRET_ACCESS_KEY=<your-secret-access-key>
 AWS_DEFAULT_REGION=<your-preferred-region>
 ```
-## Getting Started
+# Setting up Bing:
+If you receive the following error, you can try providing a cookie and see if it works then:
+
+Exception: Authentication failed. You have not been accepted into the beta.
+
+### Collect cookies
+
+1. Get a browser that looks like Microsoft Edge.
+   - (Easy) Install the latest version of Microsoft Edge.
+   - (Advanced) Alternatively, you can use any browser and set the user-agent to look like you're using Edge (e.g., Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1661.51). You can do this easily with an extension like "User-Agent Switcher and Manager" for Chrome and Firefox.
+
+2. Open [bing.com/chat](https://www.bing.com/chat).
+   - If you see a chat feature, you are good to continue.
+
+3. Install the cookie editor extension for Chrome or Firefox.
+
+4. Go to [bing.com](https://www.bing.com).
+
+5. Open the cookie editor extension.
+
+6. Click "Export" on the bottom right, then "Export as JSON" (This saves your cookies to clipboard).
+
+7. Paste your cookies into a file named `bing_cookies_*.json`.
+   - NOTE: The cookies file name MUST follow the regex pattern `bing_cookies_*.json`, so that they could be recognized by internal cookie processing mechanisms.
+
+### Use cookies in code
+```python
+import json
+from EdgeGPT.EdgeGPT import Chatbot
+
+cookies = json.loads(open("./path/to/cookies.json", encoding="utf-8").read())  # might omit cookies option
+bot = await Chatbot.create(cookies=cookies)
+```
+
+
+## Getting Started With Bernard.
 
 Clone the Bernard repository:
 
@@ -79,7 +115,8 @@ If a command is recognized in your input, Bernard will execute it from the comma
 
  - Bernard will only respond when addressed directly. "Bernard, what is the capital of New Mexico?" or, "how many planets are in our solar system, Bernard?"
  - To exit, tell Bernard you'd like to quit, exit, or end the program, etc. He's pretty smart, he'll usually know what you mean..
-
+ - Ask Bernard to "look something up online" or, "Check the internet" or about current events and he can now access bing chat and look things up online :)
+ - 
 ### Contributing
 
 Contributions are welcome! If you find any issues or have suggestions for improvement, please feel free to submit a pull request.

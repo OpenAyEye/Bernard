@@ -72,8 +72,10 @@ functions = [
 
 async def bing_chat(user_input):
     user_input = user_input.replace('Bernard', '')
+    cookies = json.loads(open("cookies.json", encoding="utf-8").read())  # might omit cookies option
+    #bot = await Chatbot.create(cookies=cookies)
     print("Binging it")
-    bot = await EdgeGPT.EdgeGPT.Chatbot.create()
+    bot = await EdgeGPT.EdgeGPT.Chatbot.create(cookies=cookies)
     response = await bot.ask(prompt=user_input, conversation_style=conversation_style.ConversationStyle.precise,
                              simplify_response=True)
     """
@@ -92,6 +94,7 @@ async def bing_chat(user_input):
     bot_response = re.sub('\[\^\d+\^\]', '', bot_response)
 
     return bot_response
+
 
 def convert_text_to_speech(text):
     response = polly_client.synthesize_speech(
@@ -116,7 +119,7 @@ def convert_text_to_speech(text):
 def get_microphone_input():
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
-        print("Listening...")
+        #print("Listening...")
         audio = recognizer.listen(source)
 
     try:
@@ -238,6 +241,7 @@ def pretty_print_conversation(messages):
         assistant_reply = last_assistant_message.strip("\n")
         response_content = assistant_reply.replace("assistant:", "").strip()
         convert_text_to_speech(response_content)
+        print("Listening...")
 
 async def main():
     conversation = [
@@ -271,6 +275,7 @@ async def main():
                 pretty_print_conversation(conversation)
 
         elif "Intent" in intent and intent["Intent"] in ["internet"]:
+
             bot_response = await bing_chat(user_input)
             assistant_reply = bot_response
             conversation.append({"role": "assistant", "content": assistant_reply})
@@ -288,5 +293,6 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
+    print("Listening...")
     asyncio.run(main())
 #   sys.exit(0)
