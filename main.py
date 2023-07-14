@@ -133,7 +133,7 @@ def get_microphone_input():
         return ""
 def user_input_intent_detection(user_input):
     response = openai.ChatCompletion.create(
-        model="gpt-4", #"gpt-3.5-turbo-0613",
+        model="gpt-4", #"gpt-3.5-turbo-0613" #revert back to 3.5-turbo if there's errors,
         messages=[
             {
                 "role": "system",
