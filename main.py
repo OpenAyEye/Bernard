@@ -18,8 +18,8 @@ import re
 # Set up AWS Polly client
 polly_client = boto3.client("polly", region_name="us-west-2")
 
-GPT_MODEL = "gpt-3.5-turbo-0613"
-
+#GPT_MODEL = "gpt-3.5-turbo-0613"
+GPT_MODEL = "gpt-4"
 
 
 # Load environment variables from the .env file
@@ -133,7 +133,7 @@ def get_microphone_input():
         return ""
 def user_input_intent_detection(user_input):
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo-0613",
+        model="gpt-4", #"gpt-3.5-turbo-0613",
         messages=[
             {
                 "role": "system",
@@ -169,7 +169,7 @@ def user_input_intent_detection(user_input):
 def command_handle(user_input):
     print("You called a command!")
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo-0613",
+        model="gpt-4",#"gpt-3.5-turbo-0613",
         messages=[
             {
                 "role": "system",
@@ -245,7 +245,8 @@ def pretty_print_conversation(messages):
 
 async def main():
     conversation = [
-        {"role": "system", "content": "You are starting a new conversation."},
+        {"role": "system", "content": "You are a cutting edge virtual assistant capable of things most would consider "
+                                      "impossible."},
         {"role": "system", "content": "You can ask questions or provide instructions."},
     ]
 
