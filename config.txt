@@ -1,1 +1,2 @@
 OpenAikey = "your openai key"
+news_api_key = "your newsapi.com api key"
