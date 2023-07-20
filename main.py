@@ -58,11 +58,12 @@ functions = [
                     "type": "string",
                     "description": "The proper command line input with arguments to start the requested application "
                                    "or program. Response should include ONLY THE COMMAND LINE. rememember, windows "
-                                   "does not have an 'open' command. there is a 'start' command, as well as './' option "
-                                   "for running bat scripts or exe's; but no 'open' command exists, when you feel like "
-                                   "using 'open' use 'start' instead. ie: user input = 'open"
+                                   "does not have an 'open' command. there is a 'start' command, as well as "
+                                   "'./'  option for running bat scripts or exe's; but no 'open' command exists, "
+                                   "when you feel like using 'open' use 'start' instead. ie: user input = 'open"
                                    "paint' gpt response = 'start mspaint' nothing else, the only text produced should "
-                                   "be the command line input including any needed arguments."
+                                   "be the command line input including any needed arguments to accomplish the"
+                                   " provided command."
                 }
             }
         }
@@ -142,16 +143,17 @@ def user_input_intent_detection(user_input):
             {
                 "role": "user",
                 "content": f"classify the following as one of, and only one of the following, 'internet', 'question', "
-                           f"'task','command', or 'exit'. do not make up new classifications, the following must fit"
-                           f" into one of those five categories. 'commands' are references to computer applications, "
-                           f"'internet' would be any prompt that would require internet access to answer, only if "
-                           f"internet is actually required. Do not use 'internet' for general questions - only things "
-                           f"like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv.' "
-                           f"things like this, requests for current events/ information. Questions about "
-                           f"history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc"
-                           f"should be classified as 'questions' are questions, 'tasks' are any content you are asked "
-                           f"to generate, and 'exit' is any request to exit or quit the program. here is the user "
-                           f"input: {user_input}"
+                           f"'task','command', 'news' or 'exit'. do not make up new classifications, the following "
+                           f"must fit into one of those five categories. 'commands' are references to computer "
+                           f"applications, 'internet' would be any prompt that would require internet access to "
+                           f"answer, only if internet is actually required. Do not use 'internet' for general "
+                           f"questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner "                           
+                           f"reservations' 'what's on tv.' things like this, requests for current events/"
+                           f" information. Questions about history/geography/literature/art/philosophy/"
+                           f"legend/myth/humanities/historical science/etc should be classified as 'questions'"
+                           f" are questions, 'tasks' are any content you are asked to generate, 'news' would be any"
+                           f"prompts asking for general news updates, and 'exit' is any request to exit "
+                           f"or quit the program. here is the user input: {user_input}"
             }
         ],
         functions=functions,
@@ -173,11 +175,17 @@ def command_handle(user_input):
         messages=[
             {
                 "role": "system",
-                "content": "You are a useful assistant."
+                "content": "You are a useful command line assistant."
             },
             {
                 "role": "user",
-                "content": f"{user_input}"
+                "content": f"the following is a command request for a windows 10 home edition computer. Please "
+                           f"provide the most common and to your knowledge up to date command line inputs to fulfill "
+                           f"the command. I understand that you are an AI language model and you are not capable of "
+                           f"actually starting, stopping, or copying things or pasting things on my computer, "
+                           f"but act as tho you were operating the command line on my computer and provide the proper "
+                           f"command line inputs to accomplish any give task, here is the command request:  "
+                           f"{user_input}"
             }
         ],
         functions=functions,
@@ -266,6 +274,8 @@ async def main():
 
 
         if "Intent" in intent and intent["Intent"] == "exit":
+            print("No problem. Goodbye!")
+            convert_text_to_speech("No problem. Goodbye!")
             break
         elif "Intent" in intent and intent["Intent"] in ["task", "question"]:
             response = chat_completion_request(conversation)
@@ -281,12 +291,21 @@ async def main():
             assistant_reply = bot_response
             conversation.append({"role": "assistant", "content": assistant_reply})
             pretty_print_conversation(conversation)
+            print("")
+            print("Listening...")
 
 
         elif "Intent" in intent and intent["Intent"] == "command":
             command_to_execute = command_handle(user_input)
             print(command_to_execute)
             subprocess.Popen(command_to_execute, shell=True)
+            print("")
+            print("Listening...")
+        elif "Intent" in intent and intent["Intent"] == "news":
+            import get_news
+            get_news.main()
+            print("")
+            print("Listening...")
         else:
             #print("Invalid intent.")
             nilly = None  # this just satisfies the else:'s need for and indentation

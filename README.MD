@@ -2,7 +2,7 @@
 
 Bernard is a GPT-based chatbot with the ability to run commands from the command line to start programs that have been set up in the environment variables.
 
-We use the new GPT3.5 turbo 0613 function calls to parse responses in a way that allows for easy integration with Python code as function arguments.
+We use the new (GPT4) GPT3.5 turbo 0613 function calls to parse responses in a way that allows for easy integration with Python code as function arguments.
 
 ## Prerequisites
 
@@ -71,6 +71,48 @@ cookies = json.loads(open("./path/to/cookies.json", encoding="utf-8").read())  #
 bot = await Chatbot.create(cookies=cookies)
 ```
 
+# Setting Up and Acquiring a NewsAPI Key
+
+NewsAPI is a simple HTTP REST API for searching and retrieving live articles from all over the web. To use NewsAPI, you need to obtain an API key. Follow the steps below to get your API key:
+
+### Step 1: Visit the NewsAPI website
+
+Go to the NewsAPI website at [https://www.newsapi.ai/](https://www.newsapi.ai/).
+
+### Step 2: Sign Up
+
+Click on the `Get API Key` button on the home page. This will take you to the sign up page. 
+
+You will need to provide your:
+
+- Full Name
+- Email Address
+- Desired Password
+
+### Step 3: Verify Your Email
+
+After signing up, you'll need to verify your email address. Check your email for a verification link from NewsAPI. Click the link to verify your account.
+
+### Step 4: Get Your API Key
+
+Once your email is verified, log in to your account. You'll be taken to your account dashboard. 
+
+Here, you'll find your API key in a section labelled `API Key`. 
+
+### Step 5: Using Your API Key
+
+Now you can use your API key to make requests to the NewsAPI. Be sure to include your API key in the header of your requests like so:
+
+``` python
+headers = { 'X-Api-Key': 'YOUR_API_KEY' # Replace 'YOUR_API_KEY' with your actual API key }
+```
+
+### Important Note
+
+Please be aware that the free tier of NewsAPI allows a limited number of requests per day. If you need to make more requests, consider upgrading to a paid plan.
+
+Remember to keep your API key secure and do not share it with others.
+
 
 ## Getting Started With Bernard.
 
@@ -96,11 +138,12 @@ Change config.txt to config.env file in the project directory and modify the fol
 
 ```
 OpenAiKey="<your-openai-api-key>"
+news_api_key="<your-news-api-key>"
 ```
 
-Replace `<your-openai-api-key>` with the API key you obtained from OpenAI.
-
-Ensure that your AWS Polly API credentials are properly set as environment variables as mentioned earlier.
+- Replace `<your-openai-api-key>` with the API key you obtained from OpenAI.
+- Replace `<your-news-api-key>` with the API key you obtained from newsapi.ai 
+- Ensure that your AWS Polly API credentials are properly set as environment variables as mentioned earlier.
 
 Run the Bernard chatbot:
 
@@ -120,6 +163,7 @@ If a command is recognized in your input, Bernard will execute it from the comma
  - Ask Bernard to open/close/run applications and programs on your computer. 
  - - you May need to add applications/programs to the environment variables of your computer.
  - - Bernard instinctively knows what command line inputs to use for programs and applications, keep in mind if you have custom installs.
+ - Ask Bernard for a news update and he'll give you 5 headlines from top categories of news.
 ### Contributing
 
 Contributions are welcome! If you find any issues or have suggestions for improvement, please feel free to submit a pull request.
