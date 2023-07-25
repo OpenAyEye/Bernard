@@ -14,12 +14,17 @@ from dotenv import load_dotenv
 from EdgeGPT.EdgeGPT import Chatbot
 from EdgeGPT import conversation_style
 import re
+import sqlite3
+import asyncio
+import datetime
+import spacy
+
 
 # Set up AWS Polly client
 polly_client = boto3.client("polly", region_name="us-west-2")
 
-#GPT_MODEL = "gpt-3.5-turbo-0613"
-GPT_MODEL = "gpt-4"
+GPT_MODEL = "gpt-3.5-turbo-0613"
+#GPT_MODEL = "gpt-4"
 
 
 # Load environment variables from the .env file
@@ -134,7 +139,7 @@ def get_microphone_input():
         return ""
 def user_input_intent_detection(user_input):
     response = openai.ChatCompletion.create(
-        model="gpt-4", #"gpt-3.5-turbo-0613" #revert back to 3.5-turbo if there's errors,
+        model="gpt-3.5-turbo-0613", #revert back to 3.5-turbo if there's errors,
         messages=[
             {
                 "role": "system",
@@ -171,7 +176,7 @@ def user_input_intent_detection(user_input):
 def command_handle(user_input):
     print("You called a command!")
     response = openai.ChatCompletion.create(
-        model="gpt-4",#"gpt-3.5-turbo-0613",
+        model="gpt-3.5-turbo-0613",
         messages=[
             {
                 "role": "system",
@@ -221,7 +226,7 @@ def chat_completion_request(messages, model=GPT_MODEL):
         return e
 
 
-def pretty_print_conversation(messages):
+def pretty_print_conversation(messages, user_input, intent):
     role_to_color = {
         "system": "red",
         "user": "green",
@@ -248,8 +253,61 @@ def pretty_print_conversation(messages):
         print(colored(last_assistant_message, role_to_color["assistant"]))
         assistant_reply = last_assistant_message.strip("\n")
         response_content = assistant_reply.replace("assistant:", "").strip()
+        # Extract user input from the last message
+
+        print("User Input: " + user_input)
+        # Extract the "Intent" value from the intent dictionary
+        user_intent = intent.get("Intent", "unknown")
+
+        update_database(user_input, response_content, user_intent)
         convert_text_to_speech(response_content)
+
         print("Listening...")
+
+
+# Load the spaCy English language model
+nlp = spacy.load("en_core_web_sm")
+
+def extract_keywords(user_input, bot_response):
+    # Combine user_input and bot_response into a single text
+    combined_text = user_input + " " + bot_response
+
+    # Process the combined text using spaCy
+    doc = nlp(combined_text)
+
+    # Extract keywords from the processed text
+    keywords = set()
+    for token in doc:
+        # Filter tokens that are nouns or proper nouns
+        if token.pos_ in {"NOUN", "PROPN"}:
+            # Lemmatize the token to get its base form
+            keywords.add(token.lemma_.lower())
+
+    return list(keywords)
+
+def update_database(user_input, bot_response, user_intent):
+    conn = sqlite3.connect('chatbot.db')  # Connect to the SQLite database
+    c = conn.cursor()
+
+    # Create the conversations table if it doesn't exist
+    c.execute('''CREATE TABLE IF NOT EXISTS conversations
+                 (date TEXT, time TEXT, user_intent TEXT, user_input TEXT, bot_response TEXT, keywords TEXT)''')
+
+    # Get the current date and time
+    current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+    current_time = datetime.datetime.now().strftime("%H:%M:%S")
+
+    # Extract keywords from user_input and bot_response
+    keywords = extract_keywords(user_input, bot_response)
+
+    # Insert the conversation data into the database
+    c.execute("INSERT INTO conversations (date, time, user_intent, user_input, bot_response, keywords) VALUES (?, ?, ?, ?, ?, ?)",
+              (current_date, current_time, user_intent, user_input, bot_response, ", ".join(keywords)))
+
+    conn.commit()  # Commit the changes
+    conn.close()  # Close the database connection
+
+
 
 async def main():
     conversation = [
@@ -283,14 +341,14 @@ async def main():
                 data = response.json()
                 assistant_reply = data["choices"][0]["message"]["content"]
                 conversation.append({"role": "assistant", "content": assistant_reply})
-                pretty_print_conversation(conversation)
+                pretty_print_conversation(conversation,user_input, intent)
 
         elif "Intent" in intent and intent["Intent"] in ["internet"]:
 
             bot_response = await bing_chat(user_input)
             assistant_reply = bot_response
             conversation.append({"role": "assistant", "content": assistant_reply})
-            pretty_print_conversation(conversation)
+            pretty_print_conversation(conversation,user_input, intent)
             print("")
             print("Listening...")
 
@@ -304,6 +362,7 @@ async def main():
         elif "Intent" in intent and intent["Intent"] == "news":
             import get_news
             get_news.main()
+            #pretty_print_conversation(conversation)
             print("")
             print("Listening...")
         else:
@@ -312,7 +371,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    import asyncio
     print("Listening...")
     asyncio.run(main())
-#   sys.exit(0)

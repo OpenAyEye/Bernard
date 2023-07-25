@@ -212,7 +212,7 @@ def main():
         print(wrapped_description)
 
         headlines = f"'{news_update['title']}' {description}"
-
+        #return headlines
         convert_text_to_speech(headlines)
 
 if __name__ == "__main__":
