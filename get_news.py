@@ -210,6 +210,7 @@ def main():
         print("-----------------------------------------------------------------------------------------------------")
         wrapped_description = textwrap.fill(description, width=120)
         print(wrapped_description)
+        print("_____________________________________________________________________________________________________")
 
         headlines = f"'{news_update['title']}' {description}"
         #return headlines
