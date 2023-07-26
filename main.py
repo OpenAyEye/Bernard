@@ -260,7 +260,7 @@ def pretty_print_conversation(messages, user_input, intent):
         response_content = assistant_reply.replace("assistant:", "").strip()
         # Extract user input from the last message
 
-        print("User Input: " + user_input)
+        #print("User Input: " + user_input)
         # Extract the "Intent" value from the intent dictionary
         user_intent = intent.get("Intent", "unknown")
 
@@ -316,14 +316,10 @@ def recollect(user_input):
             memories[user_input] = {'user_input': user_input, 'bot_response': bot_response}
 
     conn.close()
-
     # Print the memories to confirm they are working
-    print(memories)
-
-
     return memories
 
-#Need to set up recollection calls (intent elseif tree)
+    # Need to set up recollection calls (intent elseif tree)
 
 
 
@@ -353,8 +349,8 @@ def update_database(user_input, bot_response, user_intent):
 
 async def main():
     conversation = [
-        {"role": "system", "content": "You are a cutting edge virtual assistant capable of things most would consider "
-                                      "impossible."},
+        {"role": "system", "content": "You are a cutting edge virtual assistant named 'Bernard,' "
+                                      "capable of things most would consider impossible."},
         {"role": "system", "content": "You can ask questions or provide instructions."},
     ]
 
@@ -409,10 +405,10 @@ async def main():
             print("Listening...")
         elif "Intent" in intent and intent["Intent"] == "recall":
             memories = recollect(user_input)
-            print(f"{memories}")
+
             recall_prompt = (f"use the following list of 'memories': {memories} to best answer the following user_input: {user_input}. If you are uncertain, ask for clarification.")
             conversation.append({"role": "assistant", "content": recall_prompt})
-            print(conversation)
+
             response = chat_completion_request(conversation)
             if response.status_code == 200:
                 data = response.json()
