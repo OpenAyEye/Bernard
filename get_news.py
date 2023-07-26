@@ -207,7 +207,7 @@ def main():
         sleep(1)
         print("*****************************************************************************************************")
         print(f"Date: {date_str} -'{news_update['title']}'")
-        print("")
+        print("-----------------------------------------------------------------------------------------------------")
         wrapped_description = textwrap.fill(description, width=120)
         print(wrapped_description)
 
