@@ -10,3 +10,6 @@ pyaudio~=0.2.13
 python-dotenv~=1.0.0
 EdgeGPT~=0.12.0
 eventregistry~=9.1
+spacy~=3.6.0
+asyncio~=3.4.3
+sqlite3

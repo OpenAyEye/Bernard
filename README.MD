@@ -4,6 +4,8 @@ Bernard is a GPT-based chatbot with the ability to run commands from the command
 
 We use the new (GPT4) GPT3.5 turbo 0613 function calls to parse responses in a way that allows for easy integration with Python code as function arguments.
 
+Bernard has rudimentary short term and long term memory. Long Term memory recollection needs some fine-tuning, but works when given plenty of context.
+
 ## Prerequisites
 
 Before running Bernard, make sure you have the following:
