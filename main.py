@@ -300,7 +300,7 @@ def recollect(user_input):
     all_keywords = set(user_keywords)
 
     # Connect to the SQLite database
-    conn = sqlite3.connect('chatbot.db')
+    conn = sqlite3.connect('memory.db')
     c = conn.cursor()
 
     # Query the database for conversations matching the keywords
@@ -324,7 +324,7 @@ def recollect(user_input):
 
 
 def update_database(user_input, bot_response, user_intent):
-    conn = sqlite3.connect('chatbot.db')  # Connect to the SQLite database
+    conn = sqlite3.connect('memory.db')  # Connect to the SQLite database
     c = conn.cursor()
 
     # Create the conversations table if it doesn't exist
