@@ -2,7 +2,7 @@ import sqlite3
 
 def display_database_contents():
     # Connect to the SQLite database
-    conn = sqlite3.connect('chatbot.db')
+    conn = sqlite3.connect('memory.db')
     c = conn.cursor()
 
     try:
@@ -17,8 +17,8 @@ def display_database_contents():
         # Print the contents of the 'conversations' table
         for row in rows:
             date, time, user_intent, user_input, bot_response, keywords = row
-            print(f"{date}\t{time}\t{user_intent}\t\t{user_input}\t\t{bot_response}\t\t{keywords}")
-
+            #print(f"{date}\t{time}\t{user_intent}\t\t{user_input}\t\t{bot_response}\t\t{keywords}")
+            print(f"{user_input} keywords: {keywords}")
     except sqlite3.Error as e:
         print(f"Error: {e}")
 

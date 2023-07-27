@@ -217,6 +217,7 @@ def chat_completion_request(messages, model=GPT_MODEL):
     json_data = {
         "model": model,
         "messages": [{"role": message["role"], "content": message["content"]} for message in messages],
+
     }
     try:
         response = requests.post(
@@ -259,8 +260,6 @@ def pretty_print_conversation(messages, user_input, intent):
         assistant_reply = last_assistant_message.strip("\n")
         response_content = assistant_reply.replace("assistant:", "").strip()
         # Extract user input from the last message
-
-        #print("User Input: " + user_input)
         # Extract the "Intent" value from the intent dictionary
         user_intent = intent.get("Intent", "unknown")
 
@@ -271,7 +270,7 @@ def pretty_print_conversation(messages, user_input, intent):
 
 
 # Load the spaCy English language model
-nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("en_core_web_lg")
 
 def extract_keywords(user_input, bot_response):
     # Combine user_input and bot_response into a single text
