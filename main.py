@@ -25,7 +25,7 @@ polly_client = boto3.client("polly", region_name="us-west-2")
 
 GPT_MODEL = "gpt-3.5-turbo-16k-0613"
 # GPT_MODEL = "gpt-4"
-
+memory_file = "BernardBrain1.1.txt"
 
 # Load environment variables from the .env file
 load_dotenv("config.env")
@@ -97,30 +97,7 @@ functions = [
 ]
 
 
-async def bing_chat(user_input):
-    user_input = user_input.replace('Bernard', '')
-    cookies = json.loads(open("cookies.json", encoding="utf-8").read())  # might omit cookies option
-    # bot = await Chatbot.create(cookies=cookies)
-    print("Binging it")
-    bot = await EdgeGPT.EdgeGPT.Chatbot.create(cookies=cookies)
-    response = await bot.ask(prompt=user_input, conversation_style=conversation_style.ConversationStyle.precise,
-                             simplify_response=True)
-    """
-{
-    "text": str,
-    "author": str,
-    "sources": list[dict],
-    "sources_text": str,
-    "suggestions": list[str],
-    "messages_left": int
-}
-    """
-    bot_response = (response["text"])
 
-    await bot.close()
-    bot_response = re.sub('\[\^\d+\^\]', '', bot_response)
-
-    return bot_response
 
 
 def convert_text_to_speech(text):
@@ -172,23 +149,7 @@ def user_input_intent_detection(user_input):
             },
             {
                 "role": "user",
-                "content": f"classify the following as one of, and only one of the following, 'internet', 'question', "
-                           f"'task','command', 'news', 'recall', 'digest' or 'exit'. do not make up new classifications, the following "
-                           f"must fit into one of those six categories. 'commands' are references to computer "
-                           f"applications, 'internet' would be any prompt that would require internet access to "
-                           f"answer, only if internet is actually required. Do not use 'internet' for general "
-                           f"questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner "
-                           f"reservations' 'what's on tv.' things like this, requests for current events/"
-                           f" information. Questions about history/geography/literature/art/philosophy/"
-                           f"legend/myth/humanities/historical science/etc should be classified as 'questions'"
-                           f" are questions, 'tasks' are any content you are asked to generate, 'news' would be any"
-                           f"prompts asking for general news updates, 'recall' would be any requests to recall older "
-                           f"conversations - we have built in a database of previous conversations, so don't worry "
-                           f"about not actually knowing the answer just return 'recall' if the prompt seems to be "
-                           f"asking about previous interactions, 'digest' would be any request to digest, condense, "
-                           f"summarize, or otherwise give notes about a specific piece of content, ie: a youtube video,"
-                           f" a tutorial, an article, etc and 'exit' is any request to exit"
-                           f"or quit the program. here is the user input: {user_input}"
+                "content": f"Classify the following as one of, and only one of the following, 'internet', 'question', 'task','command', 'news', 'recall', 'digest' or 'exit'. Do not make up new classifications, the following must fit into one of those six categories. 'Commands' are references to computer applications, 'internet' would be any prompt that would require internet access to answer, only if internet is actually required, if anywhere in your response you have to recommend checking local websites or social medias please classify as 'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv.' things like this, requests for current events/information. Questions about history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified as 'questions' are questions, 'tasks' are prompts where you are asked to generate content, things like plot summaries for main stream media, or requests to generate new tutorials - write a poem, short story, generate python code, solve a riddle, act as something, etc. 'news' would be any prompts asking for general news updates, 'recall' would be any requests to recall older conversations - we have built in a database of previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt seems to be asking about previous interactions, 'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials. Finally 'exit' is any request to exit or quit the program. Here is the user input: {user_input}"
             }
         ],
         functions=functions,
@@ -203,6 +164,35 @@ def user_input_intent_detection(user_input):
     return json_obj
 
 
+############################################ Assistant Functionality ###################################################
+
+########## Check the Web #########
+async def bing_chat(user_input):
+    user_input = user_input.replace('Bernard', '')
+    cookies = json.loads(open("cookies.json", encoding="utf-8").read())  # might omit cookies option
+    # bot = await Chatbot.create(cookies=cookies)
+    print("Binging it")
+    bot = await EdgeGPT.EdgeGPT.Chatbot.create(cookies=cookies)
+    response = await bot.ask(prompt=user_input, conversation_style=conversation_style.ConversationStyle.precise,
+                             simplify_response=True)
+    """
+{
+    "text": str,
+    "author": str,
+    "sources": list[dict],
+    "sources_text": str,
+    "suggestions": list[str],
+    "messages_left": int
+}
+    """
+    bot_response = (response["text"])
+
+    await bot.close()
+    bot_response = re.sub('\[\^\d+\^\]', '', bot_response)
+
+    return bot_response
+
+####### Determine Command Line Inputs and Handle Them #######
 def command_handle(user_input):
     print("You called a command!")
     response = openai.ChatCompletion.create(
@@ -232,34 +222,10 @@ def command_handle(user_input):
     json_obj = json.loads(arguments)
     return json_obj["cmd_line"]
 
-
-def fine_tune_keyword(keyword_list, source_material):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo-0613",
-        messages=[
-            {
-                "role": "system",
-                "content": "You are a useful memory archive management assistant, who specializes in keyword generation for memory retrieval. your main objective is to assess source material and a list of computer generated keywords associated with that source material then generate any other keywords that may be useful in indexing the source material as a 'memory' in a database of past interactions."
-            },
-            {
-                "role": "user",
-                "content": f"please look at the following computer generated keywords list: {keyword_list} and then assess the following source material: {source_material} - considering the keywords will be used to index the given source material in a database to act as long term memory for a llm chatbot based on GPT, please offer any other keywords that may make retrieving the given source material easier, and or more accurate in the future, given what you know about natural language."
-            }
-        ],
-        functions=functions,
-        function_call={
-            "name": functions[2]["name"]
-        }
-    )
-    arguments = response["choices"][0]["message"]["function_call"]["arguments"]
-    json_obj = json.loads(arguments)
-    print(f"Suggestions: ")
-    return json_obj["suggested_keywords"]
-
-
+############################################ Conversation ##############################################################
 @retry(wait=wait_random_exponential(min=1, max=40), stop=stop_after_attempt(3))
 def chat_completion_request(messages, model=GPT_MODEL):
-    max_tokens = 14000
+    max_tokens = 10000
     headers = {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + openai.api_key,
@@ -267,7 +233,7 @@ def chat_completion_request(messages, model=GPT_MODEL):
     json_data = {
         "model": model,
         "messages": [{"role": message["role"], "content": message["content"]} for message in messages],
-        # "max_tokens": max_tokens
+        "max_tokens": max_tokens
     }
     try:
         response = requests.post(
@@ -281,7 +247,7 @@ def chat_completion_request(messages, model=GPT_MODEL):
         print(f"Exception: {e}")
         return e
 
-
+################################################### SHORT TERM MEMORY ##################################################
 def pretty_print_conversation(messages, user_input, intent):
     role_to_color = {
         "system": "red",
@@ -318,11 +284,11 @@ def pretty_print_conversation(messages, user_input, intent):
 
         print("Listening...")
 
-
+################################333############## LONG TERM MEMORY #####################################################
 # Load the spaCy English language model
 nlp = spacy.load("en_core_web_sm")
 
-
+###### Get Keywords From Content #######
 def extract_keywords(user_input, bot_response):
     # Combine user_input and bot_response into a single text
     combined_text = user_input + " " + bot_response
@@ -349,48 +315,39 @@ def extract_keywords(user_input, bot_response):
     print(f"keywords generated from this interaction: {list(keywords)}")
     return list(keywords)
 
+###### Ask GPT for keyword refinement ######
+def fine_tune_keyword(keyword_list, source_material):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo-0613",
+        messages=[
+            {
+                "role": "system",
+                "content": "You are a useful memory archive management assistant, who specializes in keyword generation for memory retrieval. your main objective is to assess source material and a list of computer generated keywords associated with that source material then generate any other keywords that may be useful in indexing the source material as a 'memory' in a database of past interactions."
+            },
+            {
+                "role": "user",
+                "content": f"please look at the following computer generated keywords list: {keyword_list} and then assess the following source material: {source_material} - considering the keywords will be used to index the given source material in a database to act as long term memory for a llm chatbot based on GPT, please offer any other keywords that may make retrieving the given source material easier, and or more accurate in the future, given what you know about natural language."
+            }
+        ],
+        functions=functions,
+        function_call={
+            "name": functions[2]["name"]
+        }
+    )
+    arguments = response["choices"][0]["message"]["function_call"]["arguments"]
+    json_obj = json.loads(arguments)
+    print(f"Suggestions: ")
+    return json_obj["suggested_keywords"]
 
-def recollect(user_input):
-    # Extract keywords from the user's input and bot's response using spaCy
-    bot_response = ""  # As we are not using the bot_response in this function, we can keep it empty
-    user_keywords = extract_keywords(user_input, bot_response)
-
-    # Combine the extracted keywords from both user input and bot response
-    all_keywords = set(user_keywords)
-    all_keywords.discard('bernard')
-    print(all_keywords)
-    # Connect to the SQLite database
-    conn = sqlite3.connect('memory_hole.db')
-    c = conn.cursor()
-
-    # Query the database for conversations matching the keywords
-    memories = {}
-    for keyword in all_keywords:
-        c.execute("SELECT user_input, bot_response FROM conversations WHERE keywords LIKE ?",
-                  (f"%{keyword}%",))
-        rows = c.fetchall()
-
-        # Store the matching conversations in the memories dictionary
-        for row in rows:
-            user_input, bot_response = row
-            memories[user_input] = {'user_input': user_input, 'bot_response': bot_response}
-
-    conn.close()
-    # Print the memories to confirm they are working
-
-    print(memories)
-    return memories
-
-    # Need to set up recollection calls (intent elseif tree)
-
-
-def update_database(user_input, bot_response, user_intent):
-    conn = sqlite3.connect('memory_hole.db')  # Connect to the SQLite database
+###### Database Functions ######
+# Update the update_database function to save each keyword in a separate row
+def update_database(user_input, bot_response, user_intent, memory_index=None):
+    conn = sqlite3.connect(memory_file)  # Connect to the SQLite database
     c = conn.cursor()
 
     # Create the conversations table if it doesn't exist
     c.execute('''CREATE TABLE IF NOT EXISTS conversations
-                 (date TEXT, time TEXT, user_intent TEXT, user_input TEXT, bot_response TEXT, keywords TEXT)''')
+                 (date TEXT, time TEXT, memory_index INTEGER, user_intent TEXT, user_input TEXT, bot_response TEXT, keyword TEXT)''')  # Update the column name to 'keyword'
 
     # Get the current date and time
     current_date = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -399,14 +356,116 @@ def update_database(user_input, bot_response, user_intent):
     # Extract keywords from user_input and bot_response
     keywords = extract_keywords(user_input, bot_response)
 
-    # Insert the conversation data into the database
-    c.execute(
-        "INSERT INTO conversations (date, time, user_intent, user_input, bot_response, keywords) VALUES (?, ?, ?, ?, ?, ?)",
-        (current_date, current_time, user_intent, user_input, bot_response, ", ".join(keywords)))
+    # Determine the memory_index if it's not provided
+    if memory_index is None:
+        c.execute("SELECT memory_index FROM conversations ORDER BY memory_index DESC LIMIT 1")
+        last_memory_index = c.fetchone()
+        if last_memory_index:
+            memory_index = last_memory_index[0] + 1
+        else:
+            memory_index = 1
+
+    # Insert the conversation data into the database for each keyword
+    for keyword in keywords:
+        c.execute(
+            "INSERT INTO conversations (date, time, memory_index, user_intent, user_input, bot_response, keyword) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (current_date, current_time, memory_index, user_intent, user_input, bot_response, keyword))
 
     conn.commit()  # Commit the changes
     conn.close()  # Close the database connection
 
+
+# Update the recollect function to search for each keyword individually
+import sqlite3
+
+import sqlite3
+
+def recollect(user_input, intent=None):
+    # Extract keywords from the user's input using spaCy
+    user_keywords = extract_keywords(user_input, bot_response="")  # Assuming the extract_keywords function is defined elsewhere
+
+    # Combine the extracted keywords with intent (if provided)
+    all_keywords = set(user_keywords)
+    all_keywords.discard('bernard')
+    if intent:
+        all_keywords.add(intent)
+
+    # Connect to the SQLite database
+    conn = sqlite3.connect(memory_file)
+    c = conn.cursor()
+
+    # Prepare the SQL query with multiple conditions
+    sql_query = "SELECT memory_index, date, time, user_intent, user_input, bot_response FROM conversations WHERE "
+    conditions = []
+    for _ in all_keywords:
+        conditions.append("(keyword LIKE ? OR user_intent LIKE ?)")
+    sql_query += " OR ".join(conditions)
+
+    # Execute the SQL query with multiple keyword and intent conditions
+    c.execute(sql_query, tuple(f"%{keyword}%" for keyword in all_keywords for _ in range(2)))  # Duplicate for both keyword and intent
+    rows = c.fetchall()
+
+    # Store the matching conversations in the memories dictionary
+    memories = {}
+    for row in rows:
+        memory_index, date, time, user_intent, user_input, bot_response = row
+        unique_key = f"{memory_index}_{user_input}"  # Use a unique key combining memory_index and user_input
+        memories[unique_key] = {
+            'memory_index': memory_index,
+            'date': date,
+            'time': time,
+            'user_intent': user_intent,
+            'user_input': user_input,
+            'bot_response': bot_response
+        }
+
+    conn.close()
+
+    # Print the memories to confirm they are working
+    print(memories)
+    return memories
+
+
+def recollect_bak(user_input):
+    # Extract keywords from the user's input using spaCy
+    bot = ""
+    user_keywords = extract_keywords(user_input, bot)  # Assuming the extract_keywords function is defined elsewhere
+
+    # Combine the extracted keywords
+    all_keywords = set(user_keywords)
+    all_keywords.discard('bernard')
+
+    # Connect to the SQLite database
+    conn = sqlite3.connect(memory_file)
+    c = conn.cursor()
+
+    # Query the database for conversations matching the keywords
+    memories = {}
+    for keyword in all_keywords:
+        c.execute("SELECT memory_index, date, time, user_intent, user_input, bot_response FROM conversations WHERE keyword LIKE ?",
+                  (f"%{keyword}%",))
+        rows = c.fetchall()
+
+        # Store the matching conversations in the memories dictionary
+        for row in rows:
+            memory_index, date, time, user_intent, user_input, bot_response = row
+            unique_key = f"{memory_index}_{user_input}"  # Use a unique key combining memory_index and user_input
+            memories[unique_key] = {
+                'memory_index': memory_index,
+                'date': date,
+                'time': time,
+                'user_intent': user_intent,
+                'user_input': user_input,
+                'bot_response': bot_response
+            }
+
+    conn.close()
+
+    # Print the memories to confirm they are working
+    print(memories)
+    return memories
+
+############################################ Main Function #############################################################
 
 async def main():
     conversation = [
@@ -428,11 +487,12 @@ async def main():
             intent = user_input_intent_detection(user_input)
         else:
             intent = "invalid"
-
+# Exit
         if "Intent" in intent and intent["Intent"] == "exit":
             print("No problem. Goodbye!")
             convert_text_to_speech("No problem. Goodbye!")
             break
+# Question/ Task
         elif "Intent" in intent and intent["Intent"] in ["task", "question"]:
             response = chat_completion_request(conversation)
             if response.status_code == 200:
@@ -440,7 +500,7 @@ async def main():
                 assistant_reply = data["choices"][0]["message"]["content"]
                 conversation.append({"role": "assistant", "content": assistant_reply})
                 pretty_print_conversation(conversation, user_input, intent)
-
+# Internet
         elif "Intent" in intent and intent["Intent"] in ["internet"]:
 
             bot_response = await bing_chat(user_input)
@@ -449,27 +509,26 @@ async def main():
             pretty_print_conversation(conversation, user_input, intent)
             print("")
             print("Listening...")
-
-
+# Command
         elif "Intent" in intent and intent["Intent"] == "command":
             command_to_execute = command_handle(user_input)
             print(command_to_execute)
             subprocess.Popen(command_to_execute, shell=True)
             print("")
             print("Listening...")
+# News
         elif "Intent" in intent and intent["Intent"] == "news":
             import get_news
-            get_news.main()
-            # pretty_print_conversation(conversation)
+            conversation.append({"role": "assistant", "content": get_news.main()})
+            pretty_print_conversation(conversation, user_input, intent)
             print("")
             print("Listening...")
+# I remember.... I remember don't worry....
         elif "Intent" in intent and intent["Intent"] == "recall":
             memories = recollect(user_input)
-
             recall_prompt = (
                 f"use the following list of 'memories': {memories} to best answer the following user_input: {user_input}. If you are uncertain, ask for clarification.")
             conversation.append({"role": "assistant", "content": recall_prompt})
-
             response = chat_completion_request(conversation)
             if response.status_code == 200:
                 data = response.json()
@@ -478,15 +537,15 @@ async def main():
                 pretty_print_conversation(conversation, user_input, intent)
             print("")
             print("Listening...")
+# The Readers Digest, Condensed Edition.
         elif "Intent" in intent and intent["Intent"] == "digest":
-
             assistant_reply = tutorial_digest.main()
             conversation.append({"role": "assistant", "content": assistant_reply})
             pretty_print_conversation(conversation, user_input, intent)
             print("")
             print("Listening...")
         else:
-            # print("Invalid intent.")
+# print("Invalid intent.")
             nilly = None  # this just satisfies the else:'s need for and indentation
 
 

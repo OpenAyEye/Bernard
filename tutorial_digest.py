@@ -140,8 +140,10 @@ def digest_content(user_input):
             },
             {
                 "role": "user",
-                "content": f" write college level notes for the following content, use an outline"
-                           f" of hierarchical levels to formate these notes. Go several levels deep,"
+                "content": f" write college level notes for the following content, use The standard hierarchical "
+                           f"outline format for note-taking is commonly known as 'Outline notation' or 'Outline "
+                           f"format.' In this format, information is organized hierarchically using indentation to "
+                           f"show the relationships between different levels of information. Go several levels deep,"
                            f" make sure and note the key aspects of the content: {user_input}."
 
             }
@@ -153,10 +155,14 @@ def digest_content(user_input):
     )
     print("content digested.")
 
-    arguments = response["choices"][0]["message"]["function_call"]["arguments"]
-    json_obj = json.loads(arguments)
-
-    return json_obj["digested_content"]
+    try:
+        arguments = response["choices"][0]["message"]["function_call"]["arguments"]
+        json_obj = json.loads(arguments)
+        return json_obj["digested_content"]
+    except json.decoder.JSONDecodeError as e:
+        # Handle the JSONDecodeError gracefully
+        print(f"Error while decoding JSON data: {e}")
+        return None
 
 
 def scrape_webpage_content(webpage_url):
@@ -205,8 +211,8 @@ def scrape_webpage_content(webpage_url):
 
 
 def main():
-    #input_url = input("Enter URL: ")
-    input_url = "youtube"
+    input_url = input("Enter URL: ")
+    #input_url = "youtube"
     output_dir = "audio_files"  # Change this directory path if you want a different output location
     digested_content = "none"
     summarized_content = "none"
@@ -214,14 +220,15 @@ def main():
         os.makedirs(output_dir)
 
     if "youtube" in input_url:
-        #audio_file_path = download_audio(input_url, output_dir)
-        audio_file_path= "audio_files/ChatGPT as an Interpreter： Introducing the KB Microservice for autonomous AI entities.txt"
-
-        with open(audio_file_path, "r") as file:
-            file_content = file.read()
-        text = file_content
+        audio_file_path = download_audio(input_url, output_dir)
+        ######################################TESTING###############################################################################
+        #audio_file_path= "audio_files/ChatGPT as an Interpreter： Introducing the KB Microservice for autonomous AI entities.txt"
+        #with open(audio_file_path, "r") as file:
+        #    file_content = file.read()
+        #text = file_content
         #print(audio_file_path)
-        #text = transcribe_audio(audio_file_path)
+        ############################################END TESTING####################################################################
+        text = transcribe_audio(audio_file_path)
         print("Transcription: ")
         print(text)
         if text is not None:
@@ -233,11 +240,12 @@ def main():
                 text_file.write(text)
         else:
             print(f"Transcription for {audio_file_path} was unsuccessful.")
-
+        ################################TESTING############################################
         #print("Summary and Outline: ")
         #print("**********************")
         #print(f"Summary: {summarized_content}")
         #print(f"Outline: {digested_content}")
+        #############################END TESTING##############################################
         content_return = f"Outline:\n {digested_content} \nSummary: \n{summarized_content}"
         #print(content_return)
         return content_return
@@ -246,11 +254,13 @@ def main():
         webpage_url = input_url  # Assuming the input is a webpage URL
         webpage_content = scrape_webpage_content(webpage_url)
         digested_content = digest_content(webpage_content)
-        summarized_content = content_summary(webpage_content)
+        summarized_content = content_summary(webpage_content, digested_content)
+        #########################TESTING###############################
         #print("Summary and Outline: ")
         #print("**********************")
         #print(f"Summary: \n{summarized_content}")
         #print(f"Outline: \n{digested_content}")
+        ######################END TESTING##############################
         # Save the digested content to a text file if needed
         with open("webpage_content.txt", "w", encoding="utf-8") as text_file:
             text_file.write(webpage_content)

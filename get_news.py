@@ -85,59 +85,6 @@ def fetch_articles(api_key):
     return random_articles
 
 
-def fetch_articles_bak_II(api_key):
-    er = EventRegistry(apiKey=api_key)
-
-    # URIs for major categories
-    business_uri = er.getCategoryUri("business")
-    tech_uri = er.getCategoryUri("tech")
-    entertainment_uri = er.getCategoryUri("entertainment")
-    health_uri = er.getCategoryUri("health")
-    science_uri = er.getCategoryUri("science")
-    politics_uri = er.getCategoryUri("politics")
-
-    # Query for articles in English from the USA, excluding sports-related articles
-    q = QueryArticlesIter(
-        locationUri=er.getLocationUri("United States"),
-        lang="eng",
-        categoryUri=QueryItems.OR([business_uri, tech_uri, entertainment_uri, health_uri, science_uri, politics_uri]),
-        ignoreKeywords=QueryItems.OR(['sports', 'sport'])
-    )
-
-    articles = []
-    for art in q.execQuery(er, sortBy="date", maxItems=25):  # Fetch top 25 articles
-        articles.append(art)
-
-    # Select 5 random articles from the top 25 articles
-    random_articles = random.sample(articles, 5)
-
-    return random_articles
-
-
-def fetch_articles_bak(api_key):
-    er = EventRegistry(apiKey=api_key)
-
-    # URIs for major categories
-    business_uri = er.getCategoryUri("business")
-    tech_uri = er.getCategoryUri("tech")
-    entertainment_uri = er.getCategoryUri("entertainment")
-    health_uri = er.getCategoryUri("health")
-    science_uri = er.getCategoryUri("science")
-    politics_uri = er.getCategoryUri("politics")
-
-    # Query for articles in English from the USA, excluding sports-related articles
-    q = QueryArticlesIter(
-        locationUri=er.getLocationUri("United States"),
-        lang="eng",
-        categoryUri=QueryItems.OR([business_uri, tech_uri, entertainment_uri, health_uri, science_uri, politics_uri]),
-        ignoreKeywords=QueryItems.OR(['sports', 'sport'])
-    )
-
-    articles = []
-    for art in q.execQuery(er, sortBy="date", maxItems=5):
-        articles.append(art)
-
-    return articles[:5]
 
 
 def chat_completion_request(user_input):
@@ -215,9 +162,9 @@ def main():
         print("")
 
         headlines = f"'{news_update['title']}' {description}"
-        #return headlines
-        convert_text_to_speech(headlines)
-
+        #
+        #convert_text_to_speech(headlines)
+    return headlines
 if __name__ == "__main__":
 
     main()
