@@ -6,6 +6,8 @@ We use the new (GPT4) GPT3.5 turbo 0613 function calls to parse responses in a w
 
 Bernard has rudimentary short term and long term memory. Long Term memory recollection needs some fine-tuning, but works when given plenty of context.
 
+Bernard is also capable of digesting, explaining, and outlining youtube videos, tutorials, news articles or short stories. 
+
 ## Prerequisites
 
 Before running Bernard, make sure you have the following:
