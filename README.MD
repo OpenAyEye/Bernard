@@ -6,7 +6,9 @@ We use the new (GPT4) GPT3.5 turbo 0613 function calls to parse responses in a w
 
 Bernard has rudimentary short term and long term memory. Long Term memory recollection needs some fine-tuning, but works when given plenty of context.
 
-Bernard is also capable of digesting, explaining, and outlining youtube videos, tutorials, news articles or short stories. 
+Bernard is also capable of digesting, explaining, and outlining youtube videos, tutorials, news articles or short stories.
+
+Bernard has rudimentary dictation skills, 'dictation.py' uses google cloud speech-to-text which requires setting up google-cloud
 
 ## Prerequisites
 
@@ -117,6 +119,26 @@ Please be aware that the free tier of NewsAPI allows a limited number of request
 
 Remember to keep your API key secure and do not share it with others.
 
+# Setting up Google Cloud Text-to-Speech 
+######  - only necessary for dictate.py usage, not needed for 'how_dat_dictatE.py'
+## Setup
+
+1. Make sure you have created a Google Cloud project and enabled the Speech-to-Text API.
+
+2. Create a service account key by following these steps:
+
+   - Go to the [Google Cloud Console](https://console.cloud.google.com/)
+   - Select your project from the dropdown menu.
+   - Navigate to the "IAM & Admin" > "Service Accounts" page.
+   - Click on "Create Service Account".
+   - Provide a name and description for the service account, and click on "Create".
+   - Under "Service Account Permissions", select the necessary roles for the service account (e.g., "Speech-to-Text Admin" or "Speech-to-Text Viewer").
+   - Click on "Continue" and then "Done".
+   - On the "Service Accounts" page, find the newly created service account and click on the three-dot menu icon under "Actions".
+   - Choose "Create Key".
+   - Select the key type as JSON and click on "Create". This will download the JSON file containing the credentials.
+
+3. Add the JSON file location to the config.env
 
 ## Getting Started With Bernard.
 

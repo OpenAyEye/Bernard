@@ -20,5 +20,6 @@ torch
 torchaudio~=2.0.2
 torchvision~=0.15.2
 beautifulsoup4~=4.12.2
+pyttsx3~=2.90
 
 

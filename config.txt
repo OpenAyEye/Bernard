@@ -1,2 +1,3 @@
 OpenAikey = "your openai key"
 news_api_key = "your newsapi.com api key"
+GoogleCredsJson = "your google cloud text to speech json file location"

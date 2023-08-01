@@ -51,6 +51,24 @@ load_dotenv("config.env")
 openai.api_key = os.environ.get("OpenAiKey")
 # bing_u_cookie = os.environ.get("bing_u_cookie")
 
+def download_audio_new(youtube_url, output_dir):
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'wav',
+            'preferredquality': '192',
+        }],
+        'outtmpl': os.path.join(output_dir, '%(title)s'),  # Remove .wav extension from the filename
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        result = ydl.extract_info(youtube_url, download=True)
+        audio_file_path = ydl.prepare_filename(result)
+
+    # Return the path of the downloaded audio file without .wav extension
+    return audio_file_path
+
 def download_audio(youtube_url, output_dir):
     ydl_opts = {
         'format': 'bestaudio/best',
@@ -69,10 +87,7 @@ def download_audio(youtube_url, output_dir):
     # Return the path of the downloaded audio file
     return audio_file_path
 
-
-
 def transcribe_audio(AudioFile):
-
 
     # load audio and pad/trim it to fit 30 seconds
     audio = whisper.load_audio(AudioFile)
@@ -107,7 +122,7 @@ def content_summary(user_input, outline):
             },
             {
                 "role": "user",
-                "content": f"write a long form, comprehensive and detailed 2000 word essay for computer science : "
+                "content": f"write a long form, comprehensive and detailed 2000 word essay for senior year college : "
                            f"students discussing '{user_input}'." # the lecture needs to cover the following "
                            #f"outline point for point: '{outline}'"
 
@@ -134,17 +149,16 @@ def digest_content(user_input):
         messages=[
             {
                 "role": "system",
-                "content": "You are a useful note taking assistant. You're an expert in providing comprehensive notes"
-                           " using the hierarchical outlines with lots of detail and clarifying commentary."
-                           ""
+                "content": "You are a useful Outline notation note taking assistant. You're an expert in providing "
+                           "comprehensive notes using the hierarchical outlines with lots of detail and clarifying "
+                           "commentary."
             },
             {
                 "role": "user",
-                "content": f" write college level notes for the following content, use The standard hierarchical "
-                           f"outline format for note-taking is commonly known as 'Outline notation' or 'Outline "
-                           f"format.' In this format, information is organized hierarchically using indentation to "
-                           f"show the relationships between different levels of information. Go several levels deep,"
-                           f" make sure and note the key aspects of the content: {user_input}."
+                "content": f"write college level notes for the following content, use The standard hierarchical "
+                           f"outline format for note-taking commonly known as 'Outline notation' or 'Outline "
+                           f"format. ie: '1., 1.a, 1.b, 2. 2.a,2.b, etc' Go several levels deep, make sure and note the details, include notes of "
+                           f"important key aspects of the content: {user_input}."
 
             }
         ],
@@ -233,11 +247,25 @@ def main():
         print(text)
         if text is not None:
             text_file_path = os.path.join(os.path.splitext(audio_file_path)[0] + ".txt")
+            summary_text_file_path = os.path.join(os.path.splitext(audio_file_path)[0] + "_summary.txt")
             digested_content = digest_content(text)
             summarized_content = content_summary(text, digested_content)
 
             with open(text_file_path, "w", encoding="utf-8") as text_file:
                 text_file.write(text)
+
+            page_name = os.path.basename(input_url).split(".")[0]
+            # Create the 'digested' directory if it doesn't exist
+            if not os.path.exists("digested"):
+                os.makedirs("digested")
+
+            # Save the digested content to a text file
+            output_file_path = os.path.join("digested", f"{page_name}_summary.txt")
+            with open(output_file_path, "w", encoding="utf-8") as text_file:
+                text_file.write(content_return)
+
+            #with open(summary_text_file_path, "w", encoding="utf-8") as text_file:
+            #    text_file.write(summarized_content)
         else:
             print(f"Transcription for {audio_file_path} was unsuccessful.")
         ################################TESTING############################################
@@ -247,7 +275,7 @@ def main():
         #print(f"Outline: {digested_content}")
         #############################END TESTING##############################################
         content_return = f"Outline:\n {digested_content} \nSummary: \n{summarized_content}"
-        #print(content_return)
+        print(content_return)
         return content_return
     else:
         print("not a youtube channel, will scrape for text and digest")
@@ -262,13 +290,26 @@ def main():
         #print(f"Outline: \n{digested_content}")
         ######################END TESTING##############################
         # Save the digested content to a text file if needed
-        with open("webpage_content.txt", "w", encoding="utf-8") as text_file:
-            text_file.write(webpage_content)
-        with open("digested_content.txt", "w", encoding="utf-8") as text_file:
-            text_file.write(digested_content + " " + summarized_content)
-
         content_return = f"Outline:\n {digested_content} \nSummary: \n{summarized_content}"
-        #print(content_return)
+
+        # Extract the page name from the URL
+        page_name = os.path.basename(webpage_url).split(".")[0]
+
+        # Create the 'digested' directory if it doesn't exist
+        if not os.path.exists("digested"):
+            os.makedirs("digested")
+
+        # Save the digested content to a text file
+        output_file_path = os.path.join("digested", f"{page_name}_summary.txt")
+        with open(output_file_path, "w", encoding="utf-8") as text_file:
+            text_file.write(content_return)
+        #with open("webpage_content.txt", "w", encoding="utf-8") as text_file:
+        #    text_file.write(webpage_content)
+        #with open("digested_content.txt", "w", encoding="utf-8") as text_file:
+        #    text_file.write(digested_content + " " + summarized_content)
+
+
+        print(content_return)
         return content_return
 
 if __name__ == "__main__":

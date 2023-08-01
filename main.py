@@ -11,7 +11,6 @@ from pydub import AudioSegment
 from pydub.playback import play
 import os
 from dotenv import load_dotenv
-from EdgeGPT.EdgeGPT import Chatbot
 from EdgeGPT import conversation_style
 import re
 import sqlite3
@@ -19,6 +18,8 @@ import asyncio
 import datetime
 import spacy
 import tutorial_digest
+import how_dat_dictate
+import dictation
 
 # Set up AWS Polly client
 polly_client = boto3.client("polly", region_name="us-west-2")
@@ -45,12 +46,12 @@ functions = [
                     "type": "string",
                     "description": "The intent of the user input. you must classify the user input as one of the "
                                    "following one word responses:'internet', 'question', 'task', 'command', 'news', "
-                                   "'recall', 'digest', 'exit', do not make up new classifications of intent. If you're being "
-                                   " asked to create something, ie: write a poem, or a story, or a haiku, those would  "
-                                   "classify as 'tasks'. classify the user input respectively if the user content is "
-                                   "an internet, question, a task request, a computer command, a request to recall a "
-                                   "previous interaction, a request to digest, condense or explain a video or article"
-                                   " or a call to exit."
+                                   "'recall', 'digest', 'dictate', 'exit', do not make up new classifications of "
+                                   "intent. If you're being  asked to create something, ie: write a poem, or a story, "
+                                   "or a haiku, those would classify as 'tasks'. classify the user input respectively "
+                                   "if the user content is an internet, question, a task request, a computer command, "
+                                   "a request to recall a previous interaction, a request to digest, condense or "
+                                   "explain a video or article, a request to dictate, or a call to exit."
                 }
             }
         }
@@ -149,7 +150,7 @@ def user_input_intent_detection(user_input):
             },
             {
                 "role": "user",
-                "content": f"Classify the following as one of, and only one of the following, 'internet', 'question', 'task','command', 'news', 'recall', 'digest' or 'exit'. Do not make up new classifications, the following must fit into one of those six categories. 'Commands' are references to computer applications, 'internet' would be any prompt that would require internet access to answer, only if internet is actually required, if anywhere in your response you have to recommend checking local websites or social medias please classify as 'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv.' things like this, requests for current events/information. Questions about history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified as 'questions' are questions, 'tasks' are prompts where you are asked to generate content, things like plot summaries for main stream media, or requests to generate new tutorials - write a poem, short story, generate python code, solve a riddle, act as something, etc. 'news' would be any prompts asking for general news updates, 'recall' would be any requests to recall older conversations - we have built in a database of previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt seems to be asking about previous interactions, 'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials. Finally 'exit' is any request to exit or quit the program. Here is the user input: {user_input}"
+                "content": f"Classify the following as one of, and only one of the following, 'internet', 'question', 'task','command', 'news', 'recall', 'digest', 'dictate', or 'exit'. Do not make up new classifications, the following must fit into one of those six categories. 'Commands' are references to computer applications, 'internet' would be any prompt that would require internet access to answer, only if internet is actually required, if anywhere in your response you have to recommend checking local websites or social medias please classify as 'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv.' things like this, requests for current events/information. Questions about history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified as 'questions' are questions, 'tasks' are prompts where you are asked to generate content, things like plot summaries for main stream media, or requests to generate new tutorials - write a poem, short story, generate python code, solve a riddle, act as something, etc. 'news' would be any prompts asking for general news updates, 'recall' would be any requests to recall older conversations - we have built in a database of previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt seems to be asking about previous interactions, 'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials. use the 'dictate' classification for any requests to dictate speech. Finally 'exit' is any request to exit or quit the program. Here is the user input: {user_input}"
             }
         ],
         functions=functions,
@@ -346,8 +347,8 @@ def update_database(user_input, bot_response, user_intent, memory_index=None):
     c = conn.cursor()
 
     # Create the conversations table if it doesn't exist
-    c.execute('''CREATE TABLE IF NOT EXISTS conversations
-                 (date TEXT, time TEXT, memory_index INTEGER, user_intent TEXT, user_input TEXT, bot_response TEXT, keyword TEXT)''')  # Update the column name to 'keyword'
+    c.execute('''CREATE TABLE IF NOT EXISTS conversations (date TEXT, time TEXT, memory_index INTEGER, user_intent 
+    TEXT, user_input TEXT, bot_response TEXT, keyword TEXT)''')  # Update the column name to 'keyword'
 
     # Get the current date and time
     current_date = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -376,10 +377,6 @@ def update_database(user_input, bot_response, user_intent, memory_index=None):
 
 
 # Update the recollect function to search for each keyword individually
-import sqlite3
-
-import sqlite3
-
 def recollect(user_input, intent=None):
     # Extract keywords from the user's input using spaCy
     user_keywords = extract_keywords(user_input, bot_response="")  # Assuming the extract_keywords function is defined elsewhere
@@ -527,7 +524,8 @@ async def main():
         elif "Intent" in intent and intent["Intent"] == "recall":
             memories = recollect(user_input)
             recall_prompt = (
-                f"use the following list of 'memories': {memories} to best answer the following user_input: {user_input}. If you are uncertain, ask for clarification.")
+                f"use the following list of 'memories': {memories} to best answer the following user_input: "
+                f"{user_input}. If you are uncertain, ask for clarification.")
             conversation.append({"role": "assistant", "content": recall_prompt})
             response = chat_completion_request(conversation)
             if response.status_code == 200:
@@ -540,6 +538,14 @@ async def main():
 # The Readers Digest, Condensed Edition.
         elif "Intent" in intent and intent["Intent"] == "digest":
             assistant_reply = tutorial_digest.main()
+            conversation.append({"role": "assistant", "content": assistant_reply})
+            pretty_print_conversation(conversation, user_input, intent)
+            print("")
+            print("Listening...")
+# Dictation
+        elif "Intent" in intent and intent["Intent"] == "dictate":
+
+            assistant_reply = how_dat_dictate.main() #dictation.main() #
             conversation.append({"role": "assistant", "content": assistant_reply})
             pretty_print_conversation(conversation, user_input, intent)
             print("")
