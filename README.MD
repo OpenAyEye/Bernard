@@ -119,7 +119,7 @@ Please be aware that the free tier of NewsAPI allows a limited number of request
 
 Remember to keep your API key secure and do not share it with others.
 
-# Setting up Google Cloud Text-to-Speech 
+# Setting up Google Cloud Text-to-Speech API
 ######  - only necessary for dictate.py usage, not needed for 'how_dat_dictatE.py'
 ## Setup
 
@@ -139,6 +139,7 @@ Remember to keep your API key secure and do not share it with others.
    - Select the key type as JSON and click on "Create". This will download the JSON file containing the credentials.
 
 3. Add the JSON file location to the config.env
+4. make sure you enable text to speech api
 
 ## Getting Started With Bernard.
 
