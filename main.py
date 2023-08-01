@@ -26,7 +26,7 @@ polly_client = boto3.client("polly", region_name="us-west-2")
 
 GPT_MODEL = "gpt-3.5-turbo-16k-0613"
 # GPT_MODEL = "gpt-4"
-memory_file = "BernardBrain1.1.txt"
+memory_file = "BernardBrain.db"
 
 # Load environment variables from the .env file
 load_dotenv("config.env")
