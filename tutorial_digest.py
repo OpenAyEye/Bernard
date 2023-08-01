@@ -255,7 +255,7 @@ def main():
             #    text_file.write(summarized_content)
         else:
             print(f"Transcription for {audio_file_path} was unsuccessful.")
-        ################################TESTING############################################
+        ################################TESTING#############################################
         #print("Summary and Outline: ")
         #print("**********************")
         #print(f"Summary: {summarized_content}")
