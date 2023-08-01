@@ -1,5 +1,4 @@
 import json
-import EdgeGPT.EdgeGPT
 import openai
 import requests
 from tenacity import retry, wait_random_exponential, stop_after_attempt
@@ -11,15 +10,23 @@ from pydub import AudioSegment
 from pydub.playback import play
 import os
 from dotenv import load_dotenv
+import EdgeGPT.EdgeGPT
 from EdgeGPT import conversation_style
 import re
 import sqlite3
 import asyncio
 import datetime
 import spacy
-import tutorial_digest
-import how_dat_dictate
-import dictation
+
+
+#import dictation
+import platform
+
+# Get the operating system name
+os_name = platform.system()
+os_name = os_name + " " + platform.version()
+# Print the operating system name
+print(f"Operating System: {os_name}")
 
 # Set up AWS Polly client
 polly_client = boto3.client("polly", region_name="us-west-2")
@@ -171,7 +178,7 @@ def user_input_intent_detection(user_input):
 async def bing_chat(user_input):
     user_input = user_input.replace('Bernard', '')
     cookies = json.loads(open("cookies.json", encoding="utf-8").read())  # might omit cookies option
-    # bot = await Chatbot.create(cookies=cookies)
+    #bot = await Chatbot.create(cookies=cookies)
     print("Binging it")
     bot = await EdgeGPT.EdgeGPT.Chatbot.create(cookies=cookies)
     response = await bot.ask(prompt=user_input, conversation_style=conversation_style.ConversationStyle.precise,
@@ -205,7 +212,7 @@ def command_handle(user_input):
             },
             {
                 "role": "user",
-                "content": f"the following is a command request for a windows 10 home edition computer. Please "
+                "content": f"the following is a command request for a computer running OS: {os_name}. Please "
                            f"provide the most common and to your knowledge up to date command line inputs to fulfill "
                            f"the command. I understand that you are an AI language model and you are not capable of "
                            f"actually starting, stopping, or copying things or pasting things on my computer, "
@@ -308,12 +315,12 @@ def extract_keywords(user_input, bot_response):
 
     gpt_key_suggestions = fine_tune_keyword(list(keywords), combined_text)
     keywords.update(gpt_key_suggestions)
-    print(f"GPT suggested keywords: {gpt_key_suggestions}")
-    print(f"keywords before removing duplicates: {list(keywords)}")
+    #print(f"GPT suggested keywords: {gpt_key_suggestions}")
+    #print(f"keywords before removing duplicates: {list(keywords)}")
     keywords = list(set(keywords))
     keywords = [keyword for keyword in keywords if len(keyword) > 1]
 
-    print(f"keywords generated from this interaction: {list(keywords)}")
+    #print(f"keywords generated from this interaction: {list(keywords)}")
     return list(keywords)
 
 ###### Ask GPT for keyword refinement ######
@@ -337,7 +344,7 @@ def fine_tune_keyword(keyword_list, source_material):
     )
     arguments = response["choices"][0]["message"]["function_call"]["arguments"]
     json_obj = json.loads(arguments)
-    print(f"Suggestions: ")
+    #print(f"Suggestions: ")
     return json_obj["suggested_keywords"]
 
 ###### Database Functions ######
@@ -379,7 +386,9 @@ def update_database(user_input, bot_response, user_intent, memory_index=None):
 # Update the recollect function to search for each keyword individually
 def recollect(user_input, intent=None):
     # Extract keywords from the user's input using spaCy
-    user_keywords = extract_keywords(user_input, bot_response="")  # Assuming the extract_keywords function is defined elsewhere
+    user_keywords = extract_keywords(user_input, bot_response="")  # we're using the same keyword generation function
+    # as when we store memories, but when retrieving them we don't have an actual 'bot response' so we'll just pass a
+    # long an empty string, and won't affect the way the content is used to generate keywords for memory recollection.
 
     # Combine the extracted keywords with intent (if provided)
     all_keywords = set(user_keywords)
@@ -419,7 +428,7 @@ def recollect(user_input, intent=None):
     conn.close()
 
     # Print the memories to confirm they are working
-    print(memories)
+    #print(memories)
     return memories
 
 
@@ -537,14 +546,15 @@ async def main():
             print("Listening...")
 # The Readers Digest, Condensed Edition.
         elif "Intent" in intent and intent["Intent"] == "digest":
+            import tutorial_digest
             assistant_reply = tutorial_digest.main()
             conversation.append({"role": "assistant", "content": assistant_reply})
             pretty_print_conversation(conversation, user_input, intent)
             print("")
             print("Listening...")
-# Dictation
+# Dictation, as in, how dat dictate! :p
         elif "Intent" in intent and intent["Intent"] == "dictate":
-
+            import how_dat_dictate
             assistant_reply = how_dat_dictate.main() #dictation.main() #
             conversation.append({"role": "assistant", "content": assistant_reply})
             pretty_print_conversation(conversation, user_input, intent)
