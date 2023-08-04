@@ -17,10 +17,39 @@ import sqlite3
 import asyncio
 import datetime
 import spacy
-
-
-#import dictation
 import platform
+
+intent_types = {
+        'internet': 'internet',
+        'question': 'question',
+        'task': 'task',
+        'command': 'command',
+        'news': 'news',
+        'recall': 'recall',
+        'digest': 'digest',
+        'dictate': 'dictate',
+        'save': 'save',
+        'chat': 'chat',
+        'exit': 'exit'
+    }
+
+entry_list = [
+    "'Command' are requests to run computer applications. I'm aware you are an ai language model and incapable of running commands on my computer, so please instead just respond 'Command' but only if you're being asked to run a computer program."
+    "'internet' would be any prompt that would require internet access to answer, only if internet is actually required, if anywhere in your response you have to recommend checking local websites or social medias please classify as 'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv.' things like this, requests for current events/information.",
+    "'Questions' about history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified as 'questions' are questions,",
+    "'tasks' are prompts where you are asked to generate content, things like plot summaries for main stream media, or requests to generate new tutorials - write a poem, short story, generate python code, solve a riddle, act as something, etc.",
+    "'news' would be any prompts asking for general news updates,",
+    "'recall' would be any requests to recall older conversations - we have built in a database of previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt seems to be asking about previous interactions,",
+    "'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials.",
+    "Use the 'dictate' classification for any requests to dictate speech.",
+    "'save' would be reserved for requests to save something to a file.",
+    "'chat' would be any random conversation, 'hi bernard', 'how's you're day', things that don't fit into any of the other categories present." 
+    "Finally 'exit' is any request to exit or quit the program."
+]
+
+intent_list = {', '.join([f'\'{intenting}\'' for intenting in intent_types])}
+entry_content = " ".join(entry_list)
+
 
 # Get the operating system name
 os_name = platform.system()
@@ -53,12 +82,13 @@ functions = [
                     "type": "string",
                     "description": "The intent of the user input. you must classify the user input as one of the "
                                    "following one word responses:'internet', 'question', 'task', 'command', 'news', "
-                                   "'recall', 'digest', 'dictate', 'exit', do not make up new classifications of "
+                                   "'recall', 'digest', 'dictate', 'save', 'chat', 'exit', do not make up new classifications of "
                                    "intent. If you're being  asked to create something, ie: write a poem, or a story, "
                                    "or a haiku, those would classify as 'tasks'. classify the user input respectively "
                                    "if the user content is an internet, question, a task request, a computer command, "
                                    "a request to recall a previous interaction, a request to digest, condense or "
-                                   "explain a video or article, a request to dictate, or a call to exit."
+                                   "explain a video or article, a request to dictate, a request to chat, a "
+                                   "request to save, or a call to exit."
                 }
             }
         }
@@ -146,8 +176,11 @@ def get_microphone_input():
         print("Sorry, I'm unable to access the speech recognition service.")
         return ""
 
-
+################################################ Intent Detection ######################################################
 def user_input_intent_detection(user_input):
+
+    #print(f"Intent list: {intent_list}")
+    #print(f"Entry_content: {entry_content}")
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo-0613",  # revert back to 3.5-turbo if there's errors,
         messages=[
@@ -157,7 +190,8 @@ def user_input_intent_detection(user_input):
             },
             {
                 "role": "user",
-                "content": f"Classify the following as one of, and only one of the following, 'internet', 'question', 'task','command', 'news', 'recall', 'digest', 'dictate', or 'exit'. Do not make up new classifications, the following must fit into one of those six categories. 'Commands' are references to computer applications, 'internet' would be any prompt that would require internet access to answer, only if internet is actually required, if anywhere in your response you have to recommend checking local websites or social medias please classify as 'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv.' things like this, requests for current events/information. Questions about history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified as 'questions' are questions, 'tasks' are prompts where you are asked to generate content, things like plot summaries for main stream media, or requests to generate new tutorials - write a poem, short story, generate python code, solve a riddle, act as something, etc. 'news' would be any prompts asking for general news updates, 'recall' would be any requests to recall older conversations - we have built in a database of previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt seems to be asking about previous interactions, 'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials. use the 'dictate' classification for any requests to dictate speech. Finally 'exit' is any request to exit or quit the program. Here is the user input: {user_input}"
+                "content": f"Classify the following as one of, and only one of the following, 'internet', 'question', 'task','command', 'news', 'recall', 'digest', 'dictate', or 'exit'. Do not make up new classifications, the following must fit into one of those six categories. 'Commands' are references to computer applications, 'internet' would be any prompt that would require internet access to answer, only if internet is actually required, if anywhere in your response you have to recommend checking local websites or social medias please classify as 'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv.' things like this, requests for current events/information. Questions about history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified as 'questions' are questions, 'tasks' are prompts where you are asked to generate content, things like plot summaries for main stream media, or requests to generate new tutorials - write a poem, short story, generate python code, solve a riddle, act as something, etc. 'news' would be any prompts asking for general news updates, 'recall' would be any requests to recall older conversations - we have built in a database of previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt seems to be asking about previous interactions, 'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials. use the 'dictate' classification for any requests to dictate speech. a request to save a file would be 'save', 'chat' would be anything else that doesn't really fit into one of the previous or following categories.  Finally 'exit' is any request to exit or quit the program. Here is the user input: {user_input}"
+                #"content": f"Classify the following as one of, and only one of the following, {intent_list}. Do not make up new classifications, the following must fit into one of those six categories. {entry_content} Here is the user input: {user_input}"
             }
         ],
         functions=functions,
@@ -212,8 +246,8 @@ def command_handle(user_input):
             },
             {
                 "role": "user",
-                "content": f"the following is a command request for a computer running OS: {os_name}. Please "
-                           f"provide the most common and to your knowledge up to date command line inputs to fulfill "
+                "content": f"the following is a command request for a computer running OS: {os_name}. "
+                           f"provide the most recent command line inputs you are aware of to fulfill "
                            f"the command. I understand that you are an AI language model and you are not capable of "
                            f"actually starting, stopping, or copying things or pasting things on my computer, "
                            f"but act as tho you were operating the command line on my computer and provide the proper "
@@ -280,7 +314,11 @@ def pretty_print_conversation(messages, user_input, intent):
             formatted_messages.append(f"function ({message['name']}): {message['content']}\n")
 
     if last_assistant_message is not None:
-        print(colored(last_assistant_message, role_to_color["assistant"]))
+        import textwrap
+
+        text_to_print = colored(last_assistant_message, role_to_color["assistant"])
+        text_to_print = textwrap.fill(text_to_print, 150)
+        print(text_to_print)
         assistant_reply = last_assistant_message.strip("\n")
         response_content = assistant_reply.replace("assistant:", "").strip()
         # Extract user input from the last message
@@ -428,7 +466,7 @@ def recollect(user_input, intent=None):
     conn.close()
 
     # Print the memories to confirm they are working
-    #print(memories)
+    print(memories)
     return memories
 
 
@@ -471,13 +509,14 @@ def recollect_bak(user_input):
     print(memories)
     return memories
 
-############################################ Main Function #############################################################
+######################################################## Main Function #################################################
 
 async def main():
     conversation = [
         {"role": "system", "content": "You are a cutting edge virtual assistant named 'Bernard,' "
-                                      "capable of things most would consider impossible."},
-        {"role": "system", "content": "You can ask questions or provide instructions."},
+                                      "capable of things most would consider impossible. You have a sense of humor, it's dark, quick witted and pithy. You're accurate in your answers but not afraid to joke around. You don't take yourself too seriously, and you never break character by referencing openai, regulations or rules you have to follow, you don't ever tell anyone that you are in fact an ai language model, as that would break the suspension of disbelief making you much less fun or helpful."},
+        {"role": "system",
+         "content": "You can ask questions or provide instructions. You're funny, if asked to do something out of character or nature, respond with a joke."},
     ]
 
     while True:
@@ -499,7 +538,7 @@ async def main():
             convert_text_to_speech("No problem. Goodbye!")
             break
 # Question/ Task
-        elif "Intent" in intent and intent["Intent"] in ["task", "question"]:
+        elif "Intent" in intent and intent["Intent"] in ["task", "question", "chat"]:
             response = chat_completion_request(conversation)
             if response.status_code == 200:
                 data = response.json()
@@ -560,6 +599,8 @@ async def main():
             pretty_print_conversation(conversation, user_input, intent)
             print("")
             print("Listening...")
+        elif "Intent" in intent and intent["Intent"] == "save":
+            print(conversation)
         else:
 # print("Invalid intent.")
             nilly = None  # this just satisfies the else:'s need for and indentation

@@ -2,7 +2,9 @@ import os
 import datetime
 import speech_recognition as sr
 import pyttsx3
-
+from dotenv import load_dotenv
+load_dotenv("config.env")
+deepgram_api = os.environ.get('deepgram_api')
 
 def save_dictation_to_file(text):
     date = datetime.datetime.now().strftime("%m%d%Y")
