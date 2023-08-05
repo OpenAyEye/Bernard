@@ -20,18 +20,18 @@ import spacy
 import platform
 
 intent_types = {
-        'internet': 'internet',
-        'question': 'question',
-        'task': 'task',
-        'command': 'command',
-        'news': 'news',
-        'recall': 'recall',
-        'digest': 'digest',
-        'dictate': 'dictate',
-        'save': 'save',
-        'chat': 'chat',
-        'exit': 'exit'
-    }
+    'internet': 'internet',
+    'question': 'question',
+    'task': 'task',
+    'command': 'command',
+    'news': 'news',
+    'recall': 'recall',
+    'digest': 'digest',
+    'dictate': 'dictate',
+    'save': 'save',
+    'chat': 'chat',
+    'exit': 'exit'
+}
 
 entry_list = [
     "'Command' are requests to run computer applications. I'm aware you are an ai language model and incapable of running commands on my computer, so please instead just respond 'Command' but only if you're being asked to run a computer program."
@@ -43,13 +43,12 @@ entry_list = [
     "'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials.",
     "Use the 'dictate' classification for any requests to dictate speech.",
     "'save' would be reserved for requests to save something to a file.",
-    "'chat' would be any random conversation, 'hi bernard', 'how's you're day', things that don't fit into any of the other categories present." 
+    "'chat' would be any random conversation, 'hi bernard', 'how's you're day', things that don't fit into any of the other categories present."
     "Finally 'exit' is any request to exit or quit the program."
 ]
 
 intent_list = {', '.join([f'\'{intenting}\'' for intenting in intent_types])}
 entry_content = " ".join(entry_list)
-
 
 # Get the operating system name
 os_name = platform.system()
@@ -82,13 +81,14 @@ functions = [
                     "type": "string",
                     "description": "The intent of the user input. you must classify the user input as one of the "
                                    "following one word responses:'internet', 'question', 'task', 'command', 'news', "
-                                   "'recall', 'digest', 'dictate', 'save', 'chat', 'exit', do not make up new classifications of "
-                                   "intent. If you're being  asked to create something, ie: write a poem, or a story, "
-                                   "or a haiku, those would classify as 'tasks'. classify the user input respectively "
-                                   "if the user content is an internet, question, a task request, a computer command, "
-                                   "a request to recall a previous interaction, a request to digest, condense or "
-                                   "explain a video or article, a request to dictate, a request to chat, a "
-                                   "request to save, or a call to exit."
+                                   "'recall', 'digest', 'dictate', 'save', 'chat', 'code', 'exit', do not make up new "
+                                   "classifications of intent. If you're being  asked to create something, ie: write "
+                                   "a poem, or a story, or a haiku, those would classify as 'tasks'. classify the "
+                                   "user input respectively if the user content is an internet, question, "
+                                   "a task request, a computer command, a request to recall a previous interaction, "
+                                   "a request to digest, condense or explain a video or article, a request to "
+                                   "dictate, a request to chat, a request to save, a request to generate code, "
+                                   "or a call to exit."
                 }
             }
         }
@@ -135,9 +135,6 @@ functions = [
 ]
 
 
-
-
-
 def convert_text_to_speech(text):
     response = polly_client.synthesize_speech(
         Text=text,
@@ -176,11 +173,11 @@ def get_microphone_input():
         print("Sorry, I'm unable to access the speech recognition service.")
         return ""
 
+
 ################################################ Intent Detection ######################################################
 def user_input_intent_detection(user_input):
-
-    #print(f"Intent list: {intent_list}")
-    #print(f"Entry_content: {entry_content}")
+    # print(f"Intent list: {intent_list}")
+    # print(f"Entry_content: {entry_content}")
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo-0613",  # revert back to 3.5-turbo if there's errors,
         messages=[
@@ -190,8 +187,8 @@ def user_input_intent_detection(user_input):
             },
             {
                 "role": "user",
-                "content": f"Classify the following as one of, and only one of the following, 'internet', 'question', 'task','command', 'news', 'recall', 'digest', 'dictate', or 'exit'. Do not make up new classifications, the following must fit into one of those six categories. 'Commands' are references to computer applications, 'internet' would be any prompt that would require internet access to answer, only if internet is actually required, if anywhere in your response you have to recommend checking local websites or social medias please classify as 'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv.' things like this, requests for current events/information. Questions about history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified as 'questions' are questions, 'tasks' are prompts where you are asked to generate content, things like plot summaries for main stream media, or requests to generate new tutorials - write a poem, short story, generate python code, solve a riddle, act as something, etc. 'news' would be any prompts asking for general news updates, 'recall' would be any requests to recall older conversations - we have built in a database of previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt seems to be asking about previous interactions, 'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials. use the 'dictate' classification for any requests to dictate speech. a request to save a file would be 'save', 'chat' would be anything else that doesn't really fit into one of the previous or following categories.  Finally 'exit' is any request to exit or quit the program. Here is the user input: {user_input}"
-                #"content": f"Classify the following as one of, and only one of the following, {intent_list}. Do not make up new classifications, the following must fit into one of those six categories. {entry_content} Here is the user input: {user_input}"
+                "content": f"Classify the following as one of, and only one of the following, 'internet', 'question', 'task','command', 'news', 'recall', 'digest', 'dictate', or 'code' 'exit'. Do not make up new classifications, the following must fit into one of those six categories. 'Commands' are references to computer applications, 'internet' would be any prompt that would require internet access to answer, only if internet is actually required, if anywhere in your response you have to recommend checking local websites or social medias please classify as 'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv.' things like this, requests for current events/information. Questions about history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified as 'questions' are questions, 'tasks' are prompts where you are asked to generate content, things like plot summaries for main stream media, or requests to generate new tutorials - write a poem, short story, generate python code, solve a riddle, act as something, etc. 'news' would be any prompts asking for general news updates, 'recall' would be any requests to recall older conversations - we have built in a database of previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt seems to be asking about previous interactions, 'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials. use the 'dictate' classification for any requests to dictate speech. a request to save a file would be 'save', 'chat' would be anything else that doesn't really fit into one of the previous or following categories. use 'code' when asked to generate specific python scripts/functions. Finally 'exit' is any request to exit or quit the program. Here is the user input: {user_input}"
+                # "content": f"Classify the following as one of, and only one of the following, {intent_list}. Do not make up new classifications, the following must fit into one of those six categories. {entry_content} Here is the user input: {user_input}"
             }
         ],
         functions=functions,
@@ -212,7 +209,7 @@ def user_input_intent_detection(user_input):
 async def bing_chat(user_input):
     user_input = user_input.replace('Bernard', '')
     cookies = json.loads(open("cookies.json", encoding="utf-8").read())  # might omit cookies option
-    #bot = await Chatbot.create(cookies=cookies)
+    # bot = await Chatbot.create(cookies=cookies)
     print("Binging it")
     bot = await EdgeGPT.EdgeGPT.Chatbot.create(cookies=cookies)
     response = await bot.ask(prompt=user_input, conversation_style=conversation_style.ConversationStyle.precise,
@@ -233,6 +230,7 @@ async def bing_chat(user_input):
     bot_response = re.sub('\[\^\d+\^\]', '', bot_response)
 
     return bot_response
+
 
 ####### Determine Command Line Inputs and Handle Them #######
 def command_handle(user_input):
@@ -264,6 +262,7 @@ def command_handle(user_input):
     json_obj = json.loads(arguments)
     return json_obj["cmd_line"]
 
+
 ############################################ Conversation ##############################################################
 @retry(wait=wait_random_exponential(min=1, max=40), stop=stop_after_attempt(3))
 def chat_completion_request(messages, model=GPT_MODEL):
@@ -288,6 +287,7 @@ def chat_completion_request(messages, model=GPT_MODEL):
         print("Unable to generate ChatCompletion response")
         print(f"Exception: {e}")
         return e
+
 
 ################################################### SHORT TERM MEMORY ##################################################
 def pretty_print_conversation(messages, user_input, intent):
@@ -330,9 +330,11 @@ def pretty_print_conversation(messages, user_input, intent):
 
         print("Listening...")
 
+
 ################################333############## LONG TERM MEMORY #####################################################
 # Load the spaCy English language model
 nlp = spacy.load("en_core_web_sm")
+
 
 ###### Get Keywords From Content #######
 def extract_keywords(user_input, bot_response):
@@ -353,13 +355,14 @@ def extract_keywords(user_input, bot_response):
 
     gpt_key_suggestions = fine_tune_keyword(list(keywords), combined_text)
     keywords.update(gpt_key_suggestions)
-    #print(f"GPT suggested keywords: {gpt_key_suggestions}")
-    #print(f"keywords before removing duplicates: {list(keywords)}")
+    # print(f"GPT suggested keywords: {gpt_key_suggestions}")
+    # print(f"keywords before removing duplicates: {list(keywords)}")
     keywords = list(set(keywords))
     keywords = [keyword for keyword in keywords if len(keyword) > 1]
 
-    #print(f"keywords generated from this interaction: {list(keywords)}")
+    # print(f"keywords generated from this interaction: {list(keywords)}")
     return list(keywords)
+
 
 ###### Ask GPT for keyword refinement ######
 def fine_tune_keyword(keyword_list, source_material):
@@ -382,8 +385,9 @@ def fine_tune_keyword(keyword_list, source_material):
     )
     arguments = response["choices"][0]["message"]["function_call"]["arguments"]
     json_obj = json.loads(arguments)
-    #print(f"Suggestions: ")
+    # print(f"Suggestions: ")
     return json_obj["suggested_keywords"]
+
 
 ###### Database Functions ######
 # Update the update_database function to save each keyword in a separate row
@@ -446,7 +450,8 @@ def recollect(user_input, intent=None):
     sql_query += " OR ".join(conditions)
 
     # Execute the SQL query with multiple keyword and intent conditions
-    c.execute(sql_query, tuple(f"%{keyword}%" for keyword in all_keywords for _ in range(2)))  # Duplicate for both keyword and intent
+    c.execute(sql_query, tuple(
+        f"%{keyword}%" for keyword in all_keywords for _ in range(2)))  # Duplicate for both keyword and intent
     rows = c.fetchall()
 
     # Store the matching conversations in the memories dictionary
@@ -486,8 +491,9 @@ def recollect_bak(user_input):
     # Query the database for conversations matching the keywords
     memories = {}
     for keyword in all_keywords:
-        c.execute("SELECT memory_index, date, time, user_intent, user_input, bot_response FROM conversations WHERE keyword LIKE ?",
-                  (f"%{keyword}%",))
+        c.execute(
+            "SELECT memory_index, date, time, user_intent, user_input, bot_response FROM conversations WHERE keyword LIKE ?",
+            (f"%{keyword}%",))
         rows = c.fetchall()
 
         # Store the matching conversations in the memories dictionary
@@ -508,6 +514,7 @@ def recollect_bak(user_input):
     # Print the memories to confirm they are working
     print(memories)
     return memories
+
 
 ######################################################## Main Function #################################################
 
@@ -594,15 +601,26 @@ async def main():
 # Dictation, as in, how dat dictate! :p
         elif "Intent" in intent and intent["Intent"] == "dictate":
             import how_dat_dictate
-            assistant_reply = how_dat_dictate.main() #dictation.main() #
+            assistant_reply = how_dat_dictate.main()  # dictation.main() #
             conversation.append({"role": "assistant", "content": assistant_reply})
             pretty_print_conversation(conversation, user_input, intent)
             print("")
             print("Listening...")
+# Save last response as a file
         elif "Intent" in intent and intent["Intent"] == "save":
             print(conversation)
+# Write some code
+        elif "Intent" in intent and intent["Intent"] == "code":
+            import py_writer
+            source_name = input("please name the file, exclude extension. ")
+            code_to_write = py_writer.write_code(user_input)
+            pywriter_output = py_writer.main(code_to_write, source_name)
+            conversation.append({"role": "assistant", "content": pywriter_output})
+            pretty_print_conversation(conversation, user_input, intent)
+
+
         else:
-# print("Invalid intent.")
+            # print("Invalid intent.")
             nilly = None  # this just satisfies the else:'s need for and indentation
 
 
