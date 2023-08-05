@@ -39,7 +39,8 @@ def write_code(user_input):
             },
             {
                 "role": "user",
-                "content": f"Generate the following Python source code wrapped in triple single quotes: {user_input}.  If the prompt has source code with output and errors present, please handle any error codes and present the updated script in it's entirety. You will either be generating completely new code, or error handling code provided. It's important to make sure the response is wrapped in ''' to preserve formatting, and to provide the complete script because there won't be any human intervention to make the changes to the script. Only provide the source code, wrapped in ''' to preserve the formatting as a multi-line python string. never user full quotation marks."
+                #"content": f"Generate the following Python source code wrapped in triple single quotes: {user_input}.  If the prompt has source code with output and errors present, please handle any error codes and present the updated script in it's entirety. You will either be generating completely new code, or error handling code provided. It's important to make sure the response is wrapped in ''' to preserve formatting, and to provide the complete script because there won't be any human intervention to make the changes to the script. Only provide the source code, wrapped in ''' to preserve the formatting as a multi-line python string. never user full quotation marks.""content": f"Generate the following Python source code wrapped in triple single quotes: {user_input}.  If the prompt has source code with output and errors present, please handle any error codes and present the updated script in it's entirety. You will either be generating completely new code, or error handling code provided. It's important to make sure the response is wrapped in ''' to preserve formatting, and to provide the complete script because there won't be any human intervention to make the changes to the script. Only provide the source code, wrapped in ''' to preserve the formatting as a multi-line python string. never user full quotation marks."
+                "content": f"use the following prompt to generate python source code in the form of a multi-line string {user_input}.  Make sure to provide complete scripts with full logic, this process will be automated, there won't be human intervention in the code writing process. never generate double quotes '"' absolutely do not do that, ever. Your responses are returned in json format and double quotes crash everything. To reiterate, do not generate any '"' double quotations"
             }
         ],
         functions=functions,
@@ -48,13 +49,11 @@ def write_code(user_input):
         },
         max_tokens=10000
     )
-    arguments = response["choices"][0]["message"]["function_call"]["arguments"] #["source_code"]
-    print(arguments)
-    #if '"""' in arguments:
-     #   arguments = arguments[4:-5]
-    #arguments = response["choices"][0]["message"]["content"]
-    print(arguments)
+    arguments = response["choices"][0]["message"]["function_call"]["arguments"]
+
+    print(f"before removing triple quotes from arguments \n {arguments[0]}")
     #arguments = re.sub(r'"""(.*?)"""', r"'''\1'''", arguments)
+    print(f"After removing quotations marks from arguments\n {arguments}")
     json_obj = json.loads(arguments)
     print("Source Code Generated: ")
     print(json_obj["source_code"])
@@ -143,7 +142,7 @@ def main(source_code, title):
 # Example usage
 if __name__ == "__main__":
     #user_input = "write a python script that generates a simple web page with a title, a header, and some content. have the user enter these variables via input() if there are any dependencies needed include a function to install them via subprocess call to pip and a call to that install function at the start of the script."
-    user_input = "write a python script that prints 'hello world' ten times"
+    user_input = "write a breakout clone in python, it should be complete, with a controllable 'character' bar that moves left to right with a and d respectively on the keyboard, there should be a ball that bounces around the screen and breaks blocks at the top of the screen when it collides with them. the blocks should be worth points, when all the blocks break the level is over."
     source_code = write_code(user_input)
     source_code = source_code[2:-2]
     main(source_code, title="boggle")

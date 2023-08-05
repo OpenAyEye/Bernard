@@ -601,7 +601,7 @@ async def main():
 # Dictation, as in, how dat dictate! :p
         elif "Intent" in intent and intent["Intent"] == "dictate":
             import how_dat_dictate
-            assistant_reply = how_dat_dictate.main()  # dictation.main() #
+            assistant_rebreaply = how_dat_dictate.main()  # dictation.main() #
             conversation.append({"role": "assistant", "content": assistant_reply})
             pretty_print_conversation(conversation, user_input, intent)
             print("")
