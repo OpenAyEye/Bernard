@@ -160,14 +160,17 @@ def convert_text_to_speech(text):
 def get_microphone_input():
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
-        # print("Listening...")
+        #print("Listening on " + str(source))
         audio = recognizer.listen(source)
+        #print(str(audio))
 
     try:
+        #print("audio heard ")
         user_input = recognizer.recognize_google(audio)
+        #print("returning audio ")
         return user_input
     except sr.UnknownValueError:
-        # print("Sorry, I didn't catch that.")
+        #print("Sorry, I didn't catch that.")
         return ""
     except sr.RequestError:
         print("Sorry, I'm unable to access the speech recognition service.")
@@ -178,6 +181,8 @@ def get_microphone_input():
 def user_input_intent_detection(user_input):
     # print(f"Intent list: {intent_list}")
     # print(f"Entry_content: {entry_content}")
+    print("generating intent: "
+          "")
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo-0613",  # revert back to 3.5-turbo if there's errors,
         messages=[
@@ -187,7 +192,7 @@ def user_input_intent_detection(user_input):
             },
             {
                 "role": "user",
-                "content": f"Classify the following as one of, and only one of the following, 'internet', 'question', 'task','command', 'news', 'recall', 'digest', 'dictate', or 'code' 'exit'. Do not make up new classifications, the following must fit into one of those six categories. 'Commands' are references to computer applications, 'internet' would be any prompt that would require internet access to answer, only if internet is actually required, if anywhere in your response you have to recommend checking local websites or social medias please classify as 'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv.' things like this, requests for current events/information. Questions about history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified as 'questions' are questions, 'tasks' are prompts where you are asked to generate content, things like plot summaries for main stream media, or requests to generate new tutorials - write a poem, short story, generate python code, solve a riddle, act as something, etc. 'news' would be any prompts asking for general news updates, 'recall' would be any requests to recall older conversations - we have built in a database of previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt seems to be asking about previous interactions, 'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials. use the 'dictate' classification for any requests to dictate speech. a request to save a file would be 'save', 'chat' would be anything else that doesn't really fit into one of the previous or following categories. use 'code' when asked to generate specific python scripts/functions. Finally 'exit' is any request to exit or quit the program. Here is the user input: {user_input}"
+                "content": f"Classify the following as one of, and only one of the following, 'internet', 'question', 'task','command', 'news', 'recall', 'digest', 'dictate', or 'code' 'exit'. Do not make up new classifications, the following must fit into one of those six categories. 'Commands' are references to computer applications, 'internet' would be any prompt that would require internet access to answer, only if internet is actually required, if anywhere in your response you have to recommend checking local websites or social medias please classify as 'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv.' things like this, requests for current events/information. Questions about history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified as 'questions' are questions, 'tasks' are prompts where you are asked to generate content that is not code: things like plot summaries for main stream media, or requests to generate new tutorials - write a poem, short story, solve a riddle, act as something, etc. Never designate requests to code as 'task'. 'news' would be any prompts asking for general news updates, 'recall' would be any requests to recall older conversations - we have built in a database of previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt seems to be asking about previous interactions, 'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials. use the 'dictate' classification for any requests to dictate speech. a request to save a file would be 'save', 'chat' would be anything else that doesn't really fit into one of the previous or following categories. use 'code' when asked to generate specific python scripts/functions or code of any type, a request to generate code is always 'code' never 'task'. Finally 'exit' is any request to exit or quit the program. remember any requests to write code of any sort should be 'code', not 'task'. Here is the user input: {user_input}"
                 # "content": f"Classify the following as one of, and only one of the following, {intent_list}. Do not make up new classifications, the following must fit into one of those six categories. {entry_content} Here is the user input: {user_input}"
             }
         ],
@@ -538,6 +543,7 @@ async def main():
             print("User: " + user_input)
             intent = user_input_intent_detection(user_input)
         else:
+            #print("no bernard?")
             intent = "invalid"
 # Exit
         if "Intent" in intent and intent["Intent"] == "exit":
