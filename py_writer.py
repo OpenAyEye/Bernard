@@ -12,13 +12,13 @@ openai.api_key = os.environ.get("OpenAiKey")
 functions = [
     {
         "name": "source_writer",
-        "description": "generates python source code wrapped in triple single quotes.",
+        "description": "generates python source code wrapped in double hashtags: ##.",
         "parameters": {
             "type": "object",
             "properties": {
                 "source_code": {
                     "type": "string",
-                    "description": "generated source code wrapped in triple single quotes to preserve formatting."
+                    "description": "generated source code wrapped in doulbe hashtags to preserve formatting."
                 }
             }
         }
@@ -39,8 +39,7 @@ def write_code(user_input):
             },
             {
                 "role": "user",
-                #"content": f"Generate the following Python source code wrapped in triple single quotes: {user_input}.  If the prompt has source code with output and errors present, please handle any error codes and present the updated script in it's entirety. You will either be generating completely new code, or error handling code provided. It's important to make sure the response is wrapped in ''' to preserve formatting, and to provide the complete script because there won't be any human intervention to make the changes to the script. Only provide the source code, wrapped in ''' to preserve the formatting as a multi-line python string. never user full quotation marks.""content": f"Generate the following Python source code wrapped in triple single quotes: {user_input}.  If the prompt has source code with output and errors present, please handle any error codes and present the updated script in it's entirety. You will either be generating completely new code, or error handling code provided. It's important to make sure the response is wrapped in ''' to preserve formatting, and to provide the complete script because there won't be any human intervention to make the changes to the script. Only provide the source code, wrapped in ''' to preserve the formatting as a multi-line python string. never user full quotation marks."
-                "content": f"use the following prompt to generate python source code in the form of a multi-line string {user_input}.  Make sure to provide complete scripts with full logic, this process will be automated, there won't be human intervention in the code writing process. never generate double quotes '"' absolutely do not do that, ever. Your responses are returned in json format and double quotes crash everything. To reiterate, do not generate any '"' double quotations"
+                "content": f"use the following prompt to generate python source code in the form of a multi-line string {user_input}.  Make sure to provide complete scripts with full logic, this process will be automated, there won't be human intervention in the code writing process. you never generate double quotes '"' absolutely do not do that, ever. Your responses are returned in json format and double quotes crash everything. To reiterate, do not generate any '"' double quotations, also, please do not use backslashes or anything that might trigger an invalid control character json decoder error when the response is parsed later. if you need to use an apostrophe, put the text in regular quotation marks, do not use backslashes. Format your response so that it will be a valid json object, this means handling escapes and control characters properly so that the string you return can be properly loaded as a json object in python."
             }
         ],
         functions=functions,
@@ -49,17 +48,21 @@ def write_code(user_input):
         },
         max_tokens=10000
     )
-    arguments = response["choices"][0]["message"]["function_call"]["arguments"]
+    print(response)
 
-    print(f"before removing triple quotes from arguments \n {arguments[0]}")
-    #arguments = re.sub(r'"""(.*?)"""', r"'''\1'''", arguments)
-    print(f"After removing quotations marks from arguments\n {arguments}")
-    json_obj = json.loads(arguments)
-    print("Source Code Generated: ")
-    print(json_obj["source_code"])
-    print("###########################################################################################################")
-    return json_obj["source_code"]
-    #return arguments
+    # Parse the response JSON string into a dictionary
+    response_json = json.loads(response["choices"][0]["message"]["function_call"]["arguments"], strict=False)
+
+    # Extract the source code
+    source_code = response_json["source_code"]
+
+    # Sanitize the source code to remove invalid control characters
+    source_code = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x84\x86-\x9F]', '', source_code)
+    #source_code = source_code.replace("'''", '')
+
+    # Print the sanitized source code
+    print(f"Sanitized Source Code:\n{source_code}")
+    return source_code
 
 def run_script(script_location):
     output = ""
@@ -87,6 +90,7 @@ def run_script(script_location):
             with open(script_location, 'w') as file:
                 file.write(rewrite)
             print("Script re-written, trying again! ")
+            print(output)
             continue  # If an error occurs, continue the loop to try again
     print("Success! :)")
     return output
@@ -142,7 +146,10 @@ def main(source_code, title):
 # Example usage
 if __name__ == "__main__":
     #user_input = "write a python script that generates a simple web page with a title, a header, and some content. have the user enter these variables via input() if there are any dependencies needed include a function to install them via subprocess call to pip and a call to that install function at the start of the script."
-    user_input = "write a breakout clone in python, it should be complete, with a controllable 'character' bar that moves left to right with a and d respectively on the keyboard, there should be a ball that bounces around the screen and breaks blocks at the top of the screen when it collides with them. the blocks should be worth points, when all the blocks break the level is over."
+    #user_input = "write a breakout clone in python, it should be a complete clone, with a controllable 'character' bar that moves left to right with a and d respectively on the keyboard, there should be a ball that bounces around the screen and breaks blocks at the top of the screen when it collides with them. there should be 25 blocks randomly arranged among the top 3rd of the screen, and each block is worth 2 points, when all the blocks break the level is over. A new level with randomly arranged blocks will begin, the users score will continue to grow "
+    #user_input = "lets write a python script with a gui, that will manage an excel file with the following headers: Title, blank, blank, System, Genre, Price Charting, Manual, Map. we want to be able to add entries, sort the entries by title header, and remove/edit entries."
+    #user_input = "write a python script that prints 'Im the best' 10 times, and counts to 25"
+    user_input = "write a platforming game in python with a scrolling randomly generated background, platforms and a jumping mechanic with enemies we can jump on and kill"
     source_code = write_code(user_input)
-    source_code = source_code[2:-2]
-    main(source_code, title="boggle")
+    #source_code = source_code[2:-2]
+    main(source_code, title="jumpman")
