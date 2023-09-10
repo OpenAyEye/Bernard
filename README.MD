@@ -10,6 +10,8 @@ Bernard is also capable of digesting, explaining, and outlining youtube videos, 
 
 Bernard has rudimentary dictation skills, 'dictation.py' uses google cloud speech-to-text which requires setting up google-cloud
 
+Bernard can also now write, run and debug code(mostly python in testing.) check out the break out clone it made
+
 ## Prerequisites
 
 Before running Bernard, make sure you have the following:
