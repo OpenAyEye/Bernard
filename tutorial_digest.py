@@ -69,7 +69,7 @@ def download_audio(youtube_url, output_dir):
     # Return the path of the downloaded audio file
     return audio_file_path + ".wav", video_title
 
-def transcribe_audio(AudioFile):
+def transcribe_audio(AudioFile, text_file_path):
 
     # load audio and pad/trim it to fit 30 seconds
     audio = whisper.load_audio(AudioFile)
@@ -89,6 +89,9 @@ def transcribe_audio(AudioFile):
 
 
     transcription = result["text"]
+
+    with open(text_file_path, "w", encoding="utf-8") as text_file:
+        text_file.write(transcription)
     #print(transcription)
     return transcription
 
@@ -205,7 +208,22 @@ def scrape_webpage_content(webpage_url):
 
     return clean_text
 
+def split_text_into_chunks(text, max_tokens):
+    chunks = []
+    words = text.split()
+    current_chunk = ""
 
+    for word in words:
+        if len(current_chunk) + len(word) + 1 <= max_tokens:
+            current_chunk += " " + word if current_chunk else word
+        else:
+            chunks.append(current_chunk)
+            current_chunk = word
+
+    if current_chunk:
+        chunks.append(current_chunk)
+
+    return chunks
 
 
 def main():
@@ -228,18 +246,20 @@ def main():
         #text = file_content
         #print(audio_file_path)
         ############################################END TESTING####################################################################
-        text = transcribe_audio(audio_file_path)
-        print("Transcription: ")
-        print(text)
+        text_file_path = os.path.join(os.path.splitext(audio_file_path)[0] + ".txt")
+        text = transcribe_audio(audio_file_path, text_file_path)
         if text is not None:
-            text_file_path = os.path.join(os.path.splitext(audio_file_path)[0] + ".txt")
+
             summary_text_file_path = os.path.join(os.path.splitext(audio_file_path)[0] + f"_summary.txt")
+
+
+            print("Transcription: ")
+            print(text)
             digested_content = digest_content(text)
             summarized_content = content_summary(text, digested_content)
             content_return = f"Outline:\n {digested_content} \nSummary: \n{summarized_content}"
 
-            with open(text_file_path, "w", encoding="utf-8") as text_file:
-                text_file.write(text)
+
 
             page_name = os.path.basename(input_url).split(".")[0]
             # Create the 'digested' directory if it doesn't exist
