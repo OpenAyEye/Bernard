@@ -34,17 +34,27 @@ intent_types = {
 }
 
 entry_list = [
-    "'Command' are requests to run computer applications. I'm aware you are an ai language model and incapable of running commands on my computer, so please instead just respond 'Command' but only if you're being asked to run a computer program."
-    "'internet' would be any prompt that would require internet access to answer, only if internet is actually required, if anywhere in your response you have to recommend checking local websites or social medias please classify as 'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv.' things like this, requests for current events/information.",
-    "'Questions' about history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified as 'questions' are questions,",
-    "'tasks' are prompts where you are asked to generate content, things like plot summaries for main stream media, or requests to generate new tutorials - write a poem, short story, generate python code, solve a riddle, act as something, etc.",
-    "'news' would be any prompts asking for general news updates,",
-    "'recall' would be any requests to recall older conversations - we have built in a database of previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt seems to be asking about previous interactions,",
-    "'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials.",
-    "Use the 'dictate' classification for any requests to dictate speech.",
-    "'save' would be reserved for requests to save something to a file.",
-    "'chat' would be any random conversation, 'hi bernard', 'how's you're day', things that don't fit into any of the other categories present."
-    "Finally 'exit' is any request to exit or quit the program."
+    #"'Command' are requests to run computer applications. I'm aware you are an ai language model and incapable of running commands on my computer, so please instead just respond 'Command' but only if you're being asked to run a computer program. 'internet' would be any prompt that would require internet access to answer, only if internet is actually required, if anywhere in your response you have to recommend checking local websites or social media, or you think you may need to mention your knowledge cutoff date, please classify as 'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv', 'is burt reynolds still alive,' things like this, requests for current events/information. 'Questions' about history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified as 'questions' are questions, 'tasks' are prompts where you are asked to generate content, things like plot summaries for main stream media, or requests to generate new tutorials - write a poem, short story, generate python code, solve a riddle, act as something, etc., 'news' would be any prompts asking for general news updates, 'recall' would be any requests to recall older conversations - we have built in a database of previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt seems to be asking about previous interactions, 'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials. Use the 'dictate' classification for any requests to dictate speech. 'save' would be reserved for requests to save something to a file. 'chat' would be any random conversation, 'hi bernard', 'how's you're day', things that don't fit into any of the other categories present. Finally 'exit' is any request to exit or quit the program."
+    "'Command' are requests to run computer applications. I'm aware you are an ai language model and incapable of "
+    "running commands on my computer, so please instead just respond 'Command' but only if you're being asked to run "
+    "a computer program. 'internet' would be any prompt that would require internet access to answer, "
+    "only if internet is actually required, if anywhere in your response you have to recommend checking local "
+    "websites or social media, or you think you may need to mention your knowledge cutoff date, please classify as "
+    "'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather "
+    "reports', 'dinner reservations' 'what's on tv', 'is burt reynolds still alive,' things like this, requests for "
+    "current events/information. 'Questions' about "
+    "history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified "
+    "as 'questions' are questions, 'tasks' are prompts where you are asked to generate content, things like plot "
+    "summaries for main stream media, or requests to generate new tutorials - write a poem, short story, "
+    "generate python code, solve a riddle, act as something, etc., 'news' would be any prompts asking for general "
+    "news updates, 'recall' would be any requests to recall older conversations - we have built in a database of "
+    "previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt "
+    "seems to be asking about previous interactions, 'digest' would be any request to digest, condense, summarize, "
+    "or otherwise give notes about a specific piece of content present on the internet: youtube videos, "
+    "news articles, tutorials. Use the 'dictate' classification for any requests to dictate speech. 'save' would be "
+    "reserved for requests to save something to a file. 'chat' would be any random conversation, 'hi bernard', "
+    "'how's you're day', things that don't fit into any of the other categories present. Finally 'exit' is any "
+    "request to exit or quit the program."
 ]
 
 intent_list = {', '.join([f'\'{intenting}\'' for intenting in intent_types])}
@@ -71,7 +81,7 @@ from openai import OpenAI
 openai.api_key = os.environ.get("OpenAiKey")
 client = OpenAI()
 
-# bing_u_cookie = os.environ.get("bing_u_cookie")
+
 
 functions = [
     {
@@ -87,7 +97,9 @@ functions = [
                                    "'recall', 'digest', 'dictate', 'save', 'chat', 'code', 'exit', do not make up new "
                                    "classifications of intent. If you're being  asked to create something, ie: write "
                                    "a poem, or a story, or a haiku, those would classify as 'tasks'. classify the "
-                                   "user input respectively if the user content is an internet, question, "
+                                   "user input respectively if the user content is an internet (this would include any "
+                                   "request for current or up to date information. if you think you might need a 'my "
+                                   "knowledge base cutoff date' disclaimer,then choose internet), question,"
                                    "a task request, a computer command, a request to recall a previous interaction, "
                                    "a request to digest, condense or explain a video or article, a request to "
                                    "dictate, a request to chat, a request to save, a request to generate code, "
@@ -194,8 +206,8 @@ def user_input_intent_detection(user_input):
             },
             {
                 "role": "user",
-                "content": f"Classify the following as one of, and only one of the following, 'internet', 'question', 'task','command', 'news', 'recall', 'digest', 'dictate', or 'code' 'exit'. Do not make up new classifications, the following must fit into one of those six categories. 'Commands' are references to computer applications, 'internet' would be any prompt that would require internet access to answer, only if internet is actually required, if anywhere in your response you have to recommend checking local websites or social medias please classify as 'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv.' things like this, requests for current events/information. Questions about history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified as 'questions' are questions, 'tasks' are prompts where you are asked to generate content that is not code: things like plot summaries for main stream media, or requests to generate new tutorials - write a poem, short story, solve a riddle, act as something, etc. Never designate requests to code as 'task'. 'news' would be any prompts asking for general news updates, 'recall' would be any requests to recall older conversations - we have built in a database of previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt seems to be asking about previous interactions, 'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials. use the 'dictate' classification for any requests to dictate speech. a request to save a file would be 'save', 'chat' would be anything else that doesn't really fit into one of the previous or following categories. use 'code' when asked to generate specific python scripts/functions or code of any type, a request to generate code is always 'code' never 'task'. Finally 'exit' is any request to exit or quit the program. remember any requests to write code of any sort should be 'code', not 'task'. Here is the user input: {user_input}"
-                # "content": f"Classify the following as one of, and only one of the following, {intent_list}. Do not make up new classifications, the following must fit into one of those six categories. {entry_content} Here is the user input: {user_input}"
+                "content": f"Classify the following as one of, and only one of the following, 'internet', 'question', 'task','command', 'news', 'recall', 'digest', 'dictate', or 'code' 'exit'. Do not make up new classifications, the following must fit into one of those six categories. 'Commands' are references to computer applications, 'internet' would be any prompt that would require internet access to answer, only if internet is actually required, if anywhere in your response you have to recommend checking local websites or social media, or a disclaimer about your knowledge cutoff date, please classify as 'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv', 'Is x celebrity still alive?' -even if you think you know, things like this, requests for current events/information should be 'internet'. Questions about history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified as 'questions' are questions, 'tasks' are prompts where you are asked to generate content that is not code: things like plot summaries for main stream media, or requests to generate new tutorials - write a poem, short story, solve a riddle, act as something, etc. Never designate requests to code as 'task'. 'news' would be any prompts asking for general news updates, 'recall' would be any requests to recall older conversations - we have built in a database of previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt seems to be asking about previous interactions, 'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials. use the 'dictate' classification for any requests to dictate speech. a request to save a file would be 'save', 'chat' would be anything else that doesn't really fit into one of the previous or following categories. use 'code' when asked to generate specific python scripts/functions or code of any type, a request to generate code is always 'code' never 'task'. Finally 'exit' is any request to exit or quit the program. remember any requests to write code of any sort should be 'code', not 'task'. Here is the user input: {user_input}"
+                #"content": f"Classify the following as one of, and only one of the following, {intent_list}. Do not make up new classifications, the following must fit into one of those six categories. {entry_content} Here is the user input: {user_input}"
             }
         ],
         functions=functions,
@@ -213,64 +225,39 @@ def user_input_intent_detection(user_input):
 ############################################ Assistant Functionality ###################################################
 
 ########## Check the Web #########
-async def bing_schat(user_input):
+async def search_web(user_input):
     import WebSearch
-    search = WebSearch.main(user_input)
+    search_query = api_search_query(user_input)
+    search = WebSearch.main(search_query)
     return search
 
-    '''
-    import asyncio
-    import re
-    from EdgeGPT import Chatbot, ConversationStyle
-    # Check for the chosen word in the user input
-    chosen_word = "Hey Bing"  # or any other activation word you set
-    bing_output = re.search(chosen_word, user_input)
+def api_search_query(user_input):
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo-0613",
+        messages=[
+            {
+                "role": "system",
+                "content": "You are a useful assistant."
+            },
+            {
+                "role": "user",
+                "content": f"the following user input needs to be converted into a comprehensive websearch query to use with the bing search api: {user_input}"
+            }
+        ],
+        temperature=0.9,
+        max_tokens=1000,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+        n=1,
+        stop=["\nUser:"],
+    )
 
-    if bing_output:
-        # Initialize the Chatbot
-        bot = await Chatbot.create()
-        # Ask Bing Chat and get response
-        response = await bot.ask(prompt=user_input, conversation_style=ConversationStyle.creative)
+    # Get the response content
+    response_content = response.choices[0].message.content  # "choices"][0]["message"]["content"]
+    #print(response_content)
 
-        # Extract bot response
-        bot_response = None
-        for message in response["item"]["messages"]:
-            if message["author"] == "bot":
-                bot_response = message["text"]
-
-        # Clean up the response
-        raw_bing_string = re.sub('\[\^\d+\^\]', '', str(bot_response))
-
-        await bot.close()
-        return raw_bing_string
-        '''
-
-
-async def bing_chat_bak(user_input):
-    user_input = user_input.replace('Bernard', '')
-    cookies = json.loads(open("cookies.json", encoding="utf-8").read())  # might omit cookies option
-    bot = await Chatbot.create(cookies=cookies)
-    print("Binging it")
-    bot = await EdgeGPT.EdgeGPT.Chatbot.create()
-    response = await bot.ask(prompt=user_input, conversation_style=conversation_style.ConversationStyle.precise,
-                             simplify_response=True)
-    """
-{
-    "text": str,
-    "author": str,
-    "sources": list[dict],
-    "sources_text": str,
-    "suggestions": list[str],
-    "messages_left": int
-}
-    """
-    bot_response = (response["text"])
-
-    await bot.close()
-    bot_response = re.sub('\[\^\d+\^\]', '', bot_response)
-
-    return bot_response
-
+    return response_content
 
 ####### Determine Command Line Inputs and Handle Them #######
 def command_handle(user_input):
@@ -619,7 +606,7 @@ async def main():
 # Internet
         elif "Intent" in intent and intent["Intent"] in ["internet"]:
 
-            bot_response = await bing_schat(user_input)
+            bot_response = await search_web(conversation)
             assistant_reply = bot_response
             conversation.append({"role": "assistant", "content": assistant_reply})
             pretty_print_conversation(conversation, user_input, intent)
