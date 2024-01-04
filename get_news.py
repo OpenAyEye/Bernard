@@ -10,14 +10,14 @@ from datetime import datetime
 import openai
 import textwrap
 import random
-
+from openai import OpenAI
 
 # Load environment variables from the .env file
 load_dotenv("config.env")
 # Access the OpenAI key from the environment variable
 openai.api_key = os.environ.get("OpenAiKey")
 # Load environment variables from the .env file
-
+client = OpenAI()
 
 # Access the OpenAI key from the environment variable
 api_key = os.environ.get("news_api_key")
@@ -88,7 +88,8 @@ def fetch_articles(api_key):
 
 
 def chat_completion_request(user_input):
-    response = openai.ChatCompletion.create(
+
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo-0613",
         messages=[
             {
@@ -110,7 +111,7 @@ def chat_completion_request(user_input):
     )
 
     # Get the response content
-    response_content = response["choices"][0]["message"]["content"]
+    response_content = response.choices[0].message.content#"choices"][0]["message"]["content"]
 
     # Add line breaks every 120 characters or at the nearest space to 120 characters
     wrapped_response_content = textwrap.fill(response_content, width=120)

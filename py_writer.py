@@ -3,11 +3,14 @@ import subprocess
 import openai
 from dotenv import load_dotenv
 import json
+from openai import OpenAI
+
 # Load environment variables from the .env file
 load_dotenv("config.env")
 
 # Access the OpenAI key from the environment variable
 openai.api_key = os.environ.get("OpenAiKey")
+client = OpenAI()
 
 functions = [
     {
@@ -30,7 +33,7 @@ def write_code(user_input):
             import re
             print(f"User input: {user_input}")
             print("Writing that Code!!")
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo-16k-0613",
                 messages=[
                     {
@@ -51,7 +54,7 @@ def write_code(user_input):
             print(response)
 
             # Parse the response JSON string into a dictionary
-            response_json = json.loads(response["choices"][0]["message"]["function_call"]["arguments"], strict=False)
+            response_json = json.loads(response.choices[0].message.function_call.arguments, strict=False)#"choices"][0]["message"]["function_call"]["arguments"], strict=False)
 
             # Extract the source code
             source_code = response_json["source_code"]
@@ -75,7 +78,7 @@ def write_code_bakup(user_input):
     print(f"User input: {user_input}")
     print("Writing that Code!!")
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo-16k-0613",
+        model="gpt-4-1106-preview",
         messages=[
             {
                 "role": "system",

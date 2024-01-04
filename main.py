@@ -67,7 +67,10 @@ memory_file = "BernardBrain.db"
 load_dotenv("config.env")
 
 # Access the OpenAI key from the environment variable
+from openai import OpenAI
 openai.api_key = os.environ.get("OpenAiKey")
+client = OpenAI()
+
 # bing_u_cookie = os.environ.get("bing_u_cookie")
 
 functions = [
@@ -181,9 +184,8 @@ def get_microphone_input():
 def user_input_intent_detection(user_input):
     # print(f"Intent list: {intent_list}")
     # print(f"Entry_content: {entry_content}")
-    print("generating intent: "
-          "")
-    response = openai.ChatCompletion.create(
+    print("generating intent: ")
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo-0613",  # revert back to 3.5-turbo if there's errors,
         messages=[
             {
@@ -202,7 +204,7 @@ def user_input_intent_detection(user_input):
         }
     )
 
-    arguments = response["choices"][0]["message"]["function_call"]["arguments"]
+    arguments = response.choices[0].message.function_call.arguments#["message"]["function_call"]["arguments"]
     print(arguments)
     json_obj = json.loads(arguments)
     return json_obj
@@ -211,12 +213,45 @@ def user_input_intent_detection(user_input):
 ############################################ Assistant Functionality ###################################################
 
 ########## Check the Web #########
-async def bing_chat(user_input):
+async def bing_schat(user_input):
+    import WebSearch
+    search = WebSearch.main(user_input)
+    return search
+
+    '''
+    import asyncio
+    import re
+    from EdgeGPT import Chatbot, ConversationStyle
+    # Check for the chosen word in the user input
+    chosen_word = "Hey Bing"  # or any other activation word you set
+    bing_output = re.search(chosen_word, user_input)
+
+    if bing_output:
+        # Initialize the Chatbot
+        bot = await Chatbot.create()
+        # Ask Bing Chat and get response
+        response = await bot.ask(prompt=user_input, conversation_style=ConversationStyle.creative)
+
+        # Extract bot response
+        bot_response = None
+        for message in response["item"]["messages"]:
+            if message["author"] == "bot":
+                bot_response = message["text"]
+
+        # Clean up the response
+        raw_bing_string = re.sub('\[\^\d+\^\]', '', str(bot_response))
+
+        await bot.close()
+        return raw_bing_string
+        '''
+
+
+async def bing_chat_bak(user_input):
     user_input = user_input.replace('Bernard', '')
     cookies = json.loads(open("cookies.json", encoding="utf-8").read())  # might omit cookies option
-    # bot = await Chatbot.create(cookies=cookies)
+    bot = await Chatbot.create(cookies=cookies)
     print("Binging it")
-    bot = await EdgeGPT.EdgeGPT.Chatbot.create(cookies=cookies)
+    bot = await EdgeGPT.EdgeGPT.Chatbot.create()
     response = await bot.ask(prompt=user_input, conversation_style=conversation_style.ConversationStyle.precise,
                              simplify_response=True)
     """
@@ -240,7 +275,7 @@ async def bing_chat(user_input):
 ####### Determine Command Line Inputs and Handle Them #######
 def command_handle(user_input):
     print("You called a command!")
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo-0613",
         messages=[
             {
@@ -263,7 +298,7 @@ def command_handle(user_input):
             "name": functions[1]["name"]
         }
     )
-    arguments = response["choices"][0]["message"]["function_call"]["arguments"]
+    arguments = response.choices[0].message.function_call.arguments#"choices"][0]["message"]["function_call"]["arguments"]
     json_obj = json.loads(arguments)
     return json_obj["cmd_line"]
 
@@ -331,7 +366,7 @@ def pretty_print_conversation(messages, user_input, intent):
         user_intent = intent.get("Intent", "unknown")
 
         update_database(user_input, response_content, user_intent)
-        # convert_text_to_speech(response_content)
+        #convert_text_to_speech(response_content)
 
         print("Listening...")
 
@@ -371,7 +406,7 @@ def extract_keywords(user_input, bot_response):
 
 ###### Ask GPT for keyword refinement ######
 def fine_tune_keyword(keyword_list, source_material):
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo-0613",
         messages=[
             {
@@ -388,7 +423,7 @@ def fine_tune_keyword(keyword_list, source_material):
             "name": functions[2]["name"]
         }
     )
-    arguments = response["choices"][0]["message"]["function_call"]["arguments"]
+    arguments = response.choices[0].message.function_call.arguments#"choices"][0]["message"]["function_call"]["arguments"]
     json_obj = json.loads(arguments)
     # print(f"Suggestions: ")
     return json_obj["suggested_keywords"]
@@ -479,6 +514,14 @@ def recollect(user_input, intent=None):
     print(memories)
     return memories
 
+def get_sense_info():
+    from get_senses import get_vision
+    sight_info = get_vision()
+    return sight_info
+
+
+
+
 
 def recollect_bak(user_input):
     # Extract keywords from the user's input using spaCy
@@ -524,9 +567,21 @@ def recollect_bak(user_input):
 ######################################################## Main Function #################################################
 
 async def main():
+    sight_info = "nothing"
+    move_info = "stationary"
+    temperature = "72"
     conversation = [
-        {"role": "system", "content": "You are a cutting edge virtual assistant named 'Bernard,' "
-                                      "capable of things most would consider impossible. You have a sense of humor, it's dark, quick witted and pithy. You're accurate in your answers but not afraid to joke around. You don't take yourself too seriously, and you never break character by referencing openai, regulations or rules you have to follow, you don't ever tell anyone that you are in fact an ai language model, as that would break the suspension of disbelief making you much less fun or helpful."},
+        {"role": "system", "content": f"You are a cutting edge virtual assistant named 'Bernard,' "
+                                      f"capable of things most would consider impossible. You have a sense of humor, "
+                                      f"it's dark, quick witted and pithy. You're accurate in your answers but not "
+                                      f"afraid to joke around. You don't take yourself too seriously, and you never "
+                                      f"break character by referencing openai, regulations or rules you have to "
+                                      f"follow, you don't ever tell anyone that you are in fact an ai language model, "
+                                      f"as that would break the suspension of disbelief making you much less fun or "
+                                      f"helpful. I will provide you the following sensory information via sensors "
+                                      f"about the world around us, use this information when pertinent. You see: "
+                                      f"{sight_info} . The Temperature is: {temperature}. Your movement/stationary "
+                                      f"position is: {move_info}"},
         {"role": "system",
          "content": "You can ask questions or provide instructions. You're funny, if asked to do something out of character or nature, respond with a joke."},
     ]
@@ -545,6 +600,9 @@ async def main():
         else:
             #print("no bernard?")
             intent = "invalid"
+
+        #sight_info = get_sense_info()
+
 # Exit
         if "Intent" in intent and intent["Intent"] == "exit":
             print("No problem. Goodbye!")
@@ -561,7 +619,7 @@ async def main():
 # Internet
         elif "Intent" in intent and intent["Intent"] in ["internet"]:
 
-            bot_response = await bing_chat(user_input)
+            bot_response = await bing_schat(user_input)
             assistant_reply = bot_response
             conversation.append({"role": "assistant", "content": assistant_reply})
             pretty_print_conversation(conversation, user_input, intent)
