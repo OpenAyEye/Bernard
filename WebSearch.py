@@ -183,6 +183,7 @@ def create_search_file(search_results):
 def process_query_and_respond(file_path, query):
     client = OpenAI()
     delete_all_temp_files(client)
+    delete_all_assistants(client)
     time.sleep(2)
     file_path = 'search_results_temp.txt'
     file = client.files.create(
@@ -197,6 +198,7 @@ def process_query_and_respond(file_path, query):
     # Add the file to the assistant
 
     assistant = client.beta.assistants.create(
+        name="Bernard Search",
         instructions="You are a web search results analyzer who answers questions based on websearch results stored "
                      "in a text file. These search results are generated using webscraping tools so be sure to check"
                      "thoroughly before answering, you may have to wade through some clutter to infer the correct"
@@ -257,7 +259,17 @@ def process_query_and_respond(file_path, query):
         else:
             print("Run is in progress - Please Wait")
             continue
+def delete_all_assistants(client):
+    # Retrieve all assistants
+    assistants = client.beta.assistants.list(limit=None)
 
+    # Loop through each assistant and delete
+    for assistant in assistants.data:
+        try:
+            response = client.beta.assistants.delete(assistant.id)
+            print(f"Deleted assistant {assistant.id}: {response}")
+        except openai.error.OpenAIError as e:
+            print(f"Failed to delete assistant {assistant.id}: {e}")
 def delete_all_temp_files(client):
     # List all files
     files = client.files.list()
