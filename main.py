@@ -18,6 +18,8 @@ import asyncio
 import datetime
 import spacy
 import platform
+import sounddevice
+
 
 intent_types = {
     'internet': 'internet',
@@ -150,7 +152,17 @@ functions = [
 ]
 
 
+import pyttsx3
+
 def convert_text_to_speech(text):
+    engine = pyttsx3.init()
+    # Set the voice by its ID
+    david_voice_id = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_EN-US_DAVID_11.0"
+    engine.setProperty('voice', david_voice_id)
+    engine.say(text)
+    engine.runAndWait()
+
+def convert_text_to_speech_AWS_POLLY(text):
     response = polly_client.synthesize_speech(
         Text=text,
         OutputFormat="mp3",
@@ -241,7 +253,12 @@ def api_search_query(user_input):
             },
             {
                 "role": "user",
-                "content": f"the following user input needs to be converted into a comprehensive websearch query to use with the bing search api: {user_input}"
+                "content": f"please use the following user input needs to generate a comprehensive web search query "
+                           f"to use with a search api, please do not give any context to the response here, "
+                           f"only take the user input and generate a search query, your answer will be parsed for use "
+                           f"in python code, so filler is not only unnecessary but also can be detrimental to the "
+                           f"functionality of thh application, please generate a search query based on this user input,"
+                           f" with out filler: {user_input}"
             }
         ],
         temperature=0.9,
@@ -353,7 +370,7 @@ def pretty_print_conversation(messages, user_input, intent):
         user_intent = intent.get("Intent", "unknown")
 
         update_database(user_input, response_content, user_intent)
-        #convert_text_to_speech(response_content)
+        convert_text_to_speech(response_content)
 
         print("Listening...")
 
@@ -508,47 +525,6 @@ def get_sense_info():
 
 
 
-
-
-def recollect_bak(user_input):
-    # Extract keywords from the user's input using spaCy
-    bot = ""
-    user_keywords = extract_keywords(user_input, bot)  # Assuming the extract_keywords function is defined elsewhere
-
-    # Combine the extracted keywords
-    all_keywords = set(user_keywords)
-    all_keywords.discard('bernard')
-
-    # Connect to the SQLite database
-    conn = sqlite3.connect(memory_file)
-    c = conn.cursor()
-
-    # Query the database for conversations matching the keywords
-    memories = {}
-    for keyword in all_keywords:
-        c.execute(
-            "SELECT memory_index, date, time, user_intent, user_input, bot_response FROM conversations WHERE keyword LIKE ?",
-            (f"%{keyword}%",))
-        rows = c.fetchall()
-
-        # Store the matching conversations in the memories dictionary
-        for row in rows:
-            memory_index, date, time, user_intent, user_input, bot_response = row
-            unique_key = f"{memory_index}_{user_input}"  # Use a unique key combining memory_index and user_input
-            memories[unique_key] = {
-                'memory_index': memory_index,
-                'date': date,
-                'time': time,
-                'user_intent': user_intent,
-                'user_input': user_input,
-                'bot_response': bot_response
-            }
-
-    conn.close()
-
-    # Print the memories to confirm they are working
-    print(memories)
-    return memories
 
 
 ######################################################## Main Function #################################################

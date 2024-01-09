@@ -21,12 +21,14 @@ functions = [
             "properties": {
                 "source_code": {
                     "type": "string",
-                    "description": "generated source code wrapped in doulbe hashtags to preserve formatting."
+                    "description": "generated source code wrapped in double hashtags to preserve formatting."
                 }
             }
         }
     }
 ]
+
+
 def write_code(user_input):
     while True:
         try:
