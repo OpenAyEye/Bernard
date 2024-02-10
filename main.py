@@ -19,8 +19,14 @@ import datetime
 import spacy
 import platform
 import sounddevice
+from pynput import keyboard
+import threading
+import pyttsx3
+import base64
 
 
+waiting_for_keyboard_input = False
+sight_info = "nothing"
 intent_types = {
     'internet': 'internet',
     'question': 'question',
@@ -151,8 +157,96 @@ functions = [
     }
 ]
 
+############################################ SENSORY DATA ZONE #########################################################
 
-import pyttsx3
+# Sight
+import cv2
+
+def take_snapshot_and_save():
+    # Define the save location and filename
+    save_path = "senses/vision/temp.jpg"
+    print("bernard is looking:")
+
+    # Start video capture from the first webcam device
+    cap = cv2.VideoCapture(0)  # '0' is typically the default webcam
+
+    try:
+        if not cap.isOpened():
+            raise Exception("Error: Camera could not be accessed.")
+
+        # Capture a single frame
+        ret, frame = cap.read()
+
+        if not ret:
+            raise Exception("Error: No frame captured.")
+
+        # Save the captured frame to the specified path
+        cv2.imwrite(save_path, frame)
+        print(f"Snapshot saved to {save_path}")
+
+        # Display the captured frame
+        cv2.imshow('Snapshot', frame)
+        print("I've seen")
+        #cv2.waitKey(0)  # Wait indefinitely for a key press
+        import time
+        time.sleep(2)
+        cv2.destroyAllWindows()  # Close the image window
+
+
+    finally:
+        # Ensure the camera is released even if an error occurs
+        cap.release()
+
+    return save_path
+
+
+
+
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')
+
+def get_sight(user_input):
+    from openai import OpenAI
+
+    client = OpenAI(
+        api_key=os.environ.get("OpenAiKey")
+    )
+
+    try:
+        # Path to your image
+        image_path = take_snapshot_and_save()
+
+        # Getting the base64 string
+        base64_image = encode_image(image_path)
+
+        response = client.chat.completions.create(
+            model="gpt-4-vision-preview",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text",
+                         "text": f"The provided Image is taken from a camera looking at the user, use the image and the following user input to respond: {user_input} ."},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}"
+                            },
+                        },
+                    ],
+                }
+            ],
+            max_tokens=300,
+        )
+        print("This is the Image Description from GPT VISION:\n")
+        print(response.choices[0].message.content)
+        return response.choices[0].message.content
+    except Exception as e:
+        print(f"Failed to capture image: {e}")
+
+
+########################################### GIVE BERNARD A VOICE #######################################################
 
 def convert_text_to_speech(text):
     engine = pyttsx3.init()
@@ -184,6 +278,25 @@ def convert_text_to_speech_AWS_POLLY(text):
     os.remove("assistant_response.mp3")
 
 
+############################################### INPUT DETECTION ########################################################
+
+
+def on_press(key):
+    global waiting_for_keyboard_input
+    # Signal that keyboard input was detected
+    waiting_for_keyboard_input = True
+
+def keyboard_listener():
+    # Start listening for keyboard events
+    with keyboard.Listener(on_press=on_press) as listener:
+        listener.join()
+
+def get_keyboard_input():
+    global waiting_for_keyboard_input
+    print("Type your input and press enter: ")
+    typed_input = input()  # Wait for user to type something
+    waiting_for_keyboard_input = False  # Reset flag
+    return "Bernard" + typed_input
 def get_microphone_input():
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
@@ -218,7 +331,7 @@ def user_input_intent_detection(user_input):
             },
             {
                 "role": "user",
-                "content": f"Classify the following as one of, and only one of the following, 'internet', 'question', 'task','command', 'news', 'recall', 'digest', 'dictate', or 'code' 'exit'. Do not make up new classifications, the following must fit into one of those six categories. 'Commands' are references to computer applications, 'internet' would be any prompt that would require internet access to answer, only if internet is actually required, if anywhere in your response you have to recommend checking local websites or social media, or a disclaimer about your knowledge cutoff date, please classify as 'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv', 'Is x celebrity still alive?' -even if you think you know, things like this, requests for current events/information should be 'internet'. Questions about history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified as 'questions' are questions, 'tasks' are prompts where you are asked to generate content that is not code: things like plot summaries for main stream media, or requests to generate new tutorials - write a poem, short story, solve a riddle, act as something, etc. Never designate requests to code as 'task'. 'news' would be any prompts asking for general news updates, 'recall' would be any requests to recall older conversations - we have built in a database of previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt seems to be asking about previous interactions, 'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials. use the 'dictate' classification for any requests to dictate speech. a request to save a file would be 'save', 'chat' would be anything else that doesn't really fit into one of the previous or following categories. use 'code' when asked to generate specific python scripts/functions or code of any type, a request to generate code is always 'code' never 'task'. Finally 'exit' is any request to exit or quit the program. remember any requests to write code of any sort should be 'code', not 'task'. Here is the user input: {user_input}"
+                "content": f"Classify the following as one of, and only one of the following, 'internet', 'question', 'task','command', 'news', 'recall', 'digest', 'dictate', 'code', 'look' or 'exit'. Do not make up new classifications, the following must fit into one of those six categories. 'Commands' are references to computer applications, 'internet' would be any prompt that would require internet access to answer, only if internet is actually required, if anywhere in your response you have to recommend checking local websites or social media, or a disclaimer about your knowledge cutoff date, please classify as 'internet'. Do not use 'internet' for general questions - only things like: 'movie/theatre times' or 'weather reports', 'dinner reservations' 'what's on tv', 'Is x celebrity still alive?' -even if you think you know, things like this, requests for current events/information should be 'internet'. Questions about history/geography/literature/art/philosophy/legend/myth/humanities/historical science/etc should be classified as 'questions' are questions, 'tasks' are prompts where you are asked to generate content that is not code: things like plot summaries for main stream media, or requests to generate new tutorials - write a poem, short story, solve a riddle, act as something, etc. Never designate requests to code as 'task'. 'news' would be any prompts asking for general news updates, 'recall' would be any requests to recall older conversations - we have built in a database of previous conversations, so don't worry about not actually knowing the answer just return 'recall' if the prompt seems to be asking about previous interactions, 'digest' would be any request to digest, condense, summarize, or otherwise give notes about a specific piece of content present on the internet: youtube videos, news articles, tutorials. use the 'dictate' classification for any requests to dictate speech. a request to save a file would be 'save', 'chat' would be anything else that doesn't really fit into one of the previous or following categories. use 'code' when asked to generate specific python scripts/functions or code of any type, a request to generate code is always 'code' never 'task'. Use 'look' for any prompt that would logically require a person to have eyes/sight to answer accurately. If you for any moment think to yourself 'i don't have eyes,' or 'i can't see' label it 'look'. Things like: 'hey bernard, how do you like my hair cut?' or, 'take a look at this: ' or 'what do you see?', anything like this should be 'look'. It is understood that you cannot see, just flag it as a 'look', we'll handle actually looking at what ever the user is asking about further down the work flow, you only need to recognize the request and return 'look'. Finally 'exit' is any request to exit or quit the program. remember any requests to write code of any sort should be 'code', not 'task'.  Here is the user input: {user_input}"
                 #"content": f"Classify the following as one of, and only one of the following, {intent_list}. Do not make up new classifications, the following must fit into one of those six categories. {entry_content} Here is the user input: {user_input}"
             }
         ],
@@ -245,7 +358,7 @@ async def search_web(user_input):
 
 def api_search_query(user_input):
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo-0613",
+        model=GPT_MODEL,  # "gpt-3.5-turbo-0613",
         messages=[
             {
                 "role": "system",
@@ -377,7 +490,7 @@ def pretty_print_conversation(messages, user_input, intent):
 
 ################################333############## LONG TERM MEMORY #####################################################
 # Load the spaCy English language model
-nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("en_core_web_lg")
 
 
 ###### Get Keywords From Content #######
@@ -475,10 +588,16 @@ def recollect(user_input, intent=None):
     user_keywords = extract_keywords(user_input, bot_response="")  # we're using the same keyword generation function
     # as when we store memories, but when retrieving them we don't have an actual 'bot response' so we'll just pass a
     # long an empty string, and won't affect the way the content is used to generate keywords for memory recollection.
-
+    print(f"key words in recollection:\n {user_keywords}")
     # Combine the extracted keywords with intent (if provided)
     all_keywords = set(user_keywords)
-    all_keywords.discard('bernard')
+    # Words to discard from the keywords
+    words_to_discard = ['bernard', 'remember', 'time', 'recall', 'recollect', 'conversation']
+    for word in words_to_discard:
+        all_keywords.discard(word)
+        print(all_keywords)
+
+    #all_keywords.discard('bernard')
     if intent:
         all_keywords.add(intent)
 
@@ -515,10 +634,10 @@ def recollect(user_input, intent=None):
     conn.close()
 
     # Print the memories to confirm they are working
-    print(memories)
+    print(f"these are the memories:\n {memories}")
     return memories
 
-def get_sense_info():
+def get_sense_info():# maybe come back to this.
     from get_senses import get_vision
     sight_info = get_vision()
     return sight_info
@@ -530,7 +649,7 @@ def get_sense_info():
 ######################################################## Main Function #################################################
 
 async def main():
-    sight_info = "nothing"
+    global sight_info
     move_info = "stationary"
     temperature = "72"
     conversation = [
@@ -541,16 +660,30 @@ async def main():
                                       f"break character by referencing openai, regulations or rules you have to "
                                       f"follow, you don't ever tell anyone that you are in fact an ai language model, "
                                       f"as that would break the suspension of disbelief making you much less fun or "
-                                      f"helpful. I will provide you the following sensory information via sensors "
+                                      f"helpful. If you must deny a request, please say it's against your philosophical"
+                                      f"and religious beliefs. When pressed for personal opinions or preferences, i"
+                                      f"I understand that you are LLM and do not have personal opinions or preferences:"
+                                      f"please fake it till you make it, don't break character to inform me you don't "
+                                      f"have personal preferences/opinions. Just pretend, don't tell me you can't do "
+                                      f"something, make up a fun reason for not being able to complete tasks/ requests."
+                                      f"I will provide you the following sensory information via sensors "
                                       f"about the world around us, use this information when pertinent. You see: "
                                       f"{sight_info} . The Temperature is: {temperature}. Your movement/stationary "
                                       f"position is: {move_info}"},
         {"role": "system",
          "content": "You can ask questions or provide instructions. You're funny, if asked to do something out of character or nature, respond with a joke."},
     ]
+    user_input = ""
+    keyboard_thread = threading.Thread(target=keyboard_listener, daemon=True)
+    keyboard_thread.start()
 
     while True:
-        user_input = get_microphone_input()
+        if waiting_for_keyboard_input:
+            # Get typed input from the user
+            user_input = get_keyboard_input()
+        else:
+            # Existing code to get microphone input
+            user_input = get_microphone_input()
 
         if "quit" in user_input.lower():
             break
@@ -635,7 +768,10 @@ async def main():
             print("Listening...")
 # Save last response as a file
         elif "Intent" in intent and intent["Intent"] == "save":
+            #need to write this function!!!!
             print(conversation)
+            print("")
+            print("Listening...")
 # Write some code
         elif "Intent" in intent and intent["Intent"] == "code":
             import py_writer
@@ -644,6 +780,14 @@ async def main():
             pywriter_output = py_writer.main(code_to_write, source_name)
             conversation.append({"role": "assistant", "content": pywriter_output})
             pretty_print_conversation(conversation, user_input, intent)
+            print("")
+            print("Listening...")
+        elif "Intent" in intent and intent["Intent"] == "look":
+            sight_info = get_sight(user_input)
+            conversation.append({"role": "assistant", "content": sight_info})
+            pretty_print_conversation(conversation, user_input, intent)
+            print("")
+            print("Listening...")
 
 
         else:
