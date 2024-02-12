@@ -743,6 +743,7 @@ async def main():
                 f"{user_input}. If you are uncertain, ask for clarification.")
             conversation.append({"role": "assistant", "content": recall_prompt})
             response = chat_completion_request(conversation)
+            print(f"recollection response: \n {response}")
             if response.status_code == 200:
                 data = response.json()
                 assistant_reply = data["choices"][0]["message"]["content"]
