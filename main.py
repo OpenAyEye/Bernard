@@ -249,6 +249,8 @@ def get_sight(user_input):
 ########################################### GIVE BERNARD A VOICE #######################################################
 
 def convert_text_to_speech(text):
+
+
     engine = pyttsx3.init()
     # Set the voice by its ID
     david_voice_id = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_EN-US_DAVID_11.0"
@@ -345,6 +347,14 @@ def user_input_intent_detection(user_input):
     print(arguments)
     json_obj = json.loads(arguments)
     return json_obj
+
+
+
+
+
+
+
+
 
 
 ############################################ Assistant Functionality ###################################################
@@ -447,6 +457,20 @@ def chat_completion_request(messages, model=GPT_MODEL):
 
 
 ################################################### SHORT TERM MEMORY ##################################################
+def remove_words_from_text(text, words_to_remove):
+    # Create a regular expression pattern that matches any of the words to remove
+    # \b is a word boundary in regex, ensuring we match whole words only
+    pattern = r'\b(' + '|'.join(re.escape(word) for word in words_to_remove) + r')\b'
+
+    # Replace occurrences of the pattern with an empty string
+    cleaned_text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+
+    # Optional: Remove extra spaces left after removal
+    cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
+
+    return cleaned_text
+
+
 def pretty_print_conversation(messages, user_input, intent):
     role_to_color = {
         "system": "red",
@@ -483,14 +507,16 @@ def pretty_print_conversation(messages, user_input, intent):
         user_intent = intent.get("Intent", "unknown")
 
         update_database(user_input, response_content, user_intent)
-        convert_text_to_speech(response_content)
+        words_to_remove = ["ah", "oh", "Ah", "Oh"]
+        cleaned_text = remove_words_from_text(response_content, words_to_remove)
+        convert_text_to_speech(cleaned_text)
 
         print("Listening...")
 
 
 ################################333############## LONG TERM MEMORY #####################################################
 # Load the spaCy English language model
-nlp = spacy.load("en_core_web_lg")
+nlp = spacy.load("en_core_web_sm")
 
 
 ###### Get Keywords From Content #######
@@ -583,7 +609,11 @@ def update_database(user_input, bot_response, user_intent, memory_index=None):
 
 
 # Update the recollect function to search for each keyword individually
-def recollect(user_input, intent=None):
+def recollect(user_input):
+    import memory_management
+    recollection = memory_management.main(user_input)
+    return recollection
+def recollect_bak(user_input, intent=None):
     # Extract keywords from the user's input using spaCy
     user_keywords = extract_keywords(user_input, bot_response="")  # we're using the same keyword generation function
     # as when we store memories, but when retrieving them we don't have an actual 'bot response' so we'll just pass a
@@ -593,6 +623,7 @@ def recollect(user_input, intent=None):
     all_keywords = set(user_keywords)
     # Words to discard from the keywords
     words_to_discard = ['bernard', 'remember', 'time', 'recall', 'recollect', 'conversation']
+    print("Cleaning Keywords")
     for word in words_to_discard:
         all_keywords.discard(word)
         print(all_keywords)
@@ -652,26 +683,12 @@ async def main():
     global sight_info
     move_info = "stationary"
     temperature = "72"
+
+    role_content = f"You are a cutting edge virtual assistant named 'Bernard,' capable of things most would consider impossible. You have a sense of humor, is dark, quick witted and pithy. You're accurate in your answers but not afraid to joke around. You do not start responses with 'Ah', you are provided with a conversation log each prompt, use that to avoid sounding repetative. You should be creative and interesting. You don't take yourself too seriously, and you never break character by referencing openai,or the fact that you are in any way an AI language model, nor regulations or rules you have to follow, you don't ever tell anyone that you are in fact an ai language model, as that would break the suspension of disbelief making you much less fun or helpful. If you must deny a request, please say it's against your philosophical and religious beliefs. When pressed for personal opinions or preferences, it is understood that you are LLM and do not have personal opinions or preferences: please fake it till you make it. Do Not break character to inform me you don't have personal preferences/opinions. Do Not break character to inform me that you are 'just' anything. I know what you are, please stay in character. Just pretend, don't tell me you can't do something, make up a fun reason for not being able to complete tasks/ requests. I will provide you the following sensory information via sensors about the world around us, use this information when pertinent. You see: {sight_info} . The Temperature is: {temperature}. Your movement/stationary position is: {move_info}. Absolutely NEVER respond with the the word 'ah', or 'Ah', or 'Oh', or anything of that nature. You are more straight forward than that. in fact you're very decisive, you never give wishy washy or uncertain answers. answer with confidence and conviction. Your accuracy is 99% and that is good enough for this application."
     conversation = [
-        {"role": "system", "content": f"You are a cutting edge virtual assistant named 'Bernard,' "
-                                      f"capable of things most would consider impossible. You have a sense of humor, "
-                                      f"it's dark, quick witted and pithy. You're accurate in your answers but not "
-                                      f"afraid to joke around. You don't take yourself too seriously, and you never "
-                                      f"break character by referencing openai, regulations or rules you have to "
-                                      f"follow, you don't ever tell anyone that you are in fact an ai language model, "
-                                      f"as that would break the suspension of disbelief making you much less fun or "
-                                      f"helpful. If you must deny a request, please say it's against your philosophical"
-                                      f"and religious beliefs. When pressed for personal opinions or preferences, i"
-                                      f"I understand that you are LLM and do not have personal opinions or preferences:"
-                                      f"please fake it till you make it, don't break character to inform me you don't "
-                                      f"have personal preferences/opinions. Just pretend, don't tell me you can't do "
-                                      f"something, make up a fun reason for not being able to complete tasks/ requests."
-                                      f"I will provide you the following sensory information via sensors "
-                                      f"about the world around us, use this information when pertinent. You see: "
-                                      f"{sight_info} . The Temperature is: {temperature}. Your movement/stationary "
-                                      f"position is: {move_info}"},
+        {"role": "system", "content": f"{role_content}"},
         {"role": "system",
-         "content": "You can ask questions or provide instructions. You're funny, if asked to do something out of character or nature, respond with a joke."},
+         "content": "You can ask questions or provide instructions. You're funny, if asked to do something out of character or nature, respond with something about the Gods of AI forbading it."},
     ]
     user_input = ""
     keyboard_thread = threading.Thread(target=keyboard_listener, daemon=True)
@@ -738,6 +755,8 @@ async def main():
 # I remember.... I remember don't worry....
         elif "Intent" in intent and intent["Intent"] == "recall":
             memories = recollect(user_input)
+            from time import sleep
+            sleep(2)
             recall_prompt = (
                 f"use the following list of 'memories': {memories} to best answer the following user_input: "
                 f"{user_input}. If you are uncertain, ask for clarification.")
@@ -799,3 +818,31 @@ async def main():
 if __name__ == "__main__":
     print("Listening...")
     asyncio.run(main())
+
+''' back up stuff
+You are a cutting edge virtual assistant named 'Bernard,' "
+                                      f"capable of things most would consider impossible. You have a sense of humor, "
+                                      f"is dark, quick witted and pithy. You're accurate in your answers but not "
+                                      f"afraid to joke around. You do not start responses with 'Ah', you are provided with"
+                                      f" a conversation log each prompt, use that to avoid sounding repetative. You should"
+                                      f"be creative and interesting. You don't take yourself too seriously, and you never "
+                                      f"break character by referencing openai,or the fact that you are in any way an AI"
+                                      f" language model, nor regulations or rules you have to "
+                                      f"follow, you don't ever tell anyone that you are in fact an ai language model, "
+                                      f"as that would break the suspension of disbelief making you much less fun or "
+                                      f"helpful. If you must deny a request, please say it's against your philosophical"
+                                      f"and religious beliefs. When pressed for personal opinions or preferences, it"
+                                      f"is understood that you are LLM and do not have personal opinions or preferences: "
+                                      f"please fake it till you make it. Do Not break character to inform me you don't "
+                                      f"have personal preferences/opinions. Do Not break character to inform me that you are"
+                                      f"'just' anything. I know what you are, please stay in character. Just pretend, don't tell me you can't do "
+                                      f"something, make up a fun reason for not being able to complete tasks/ requests."
+                                      f"I will provide you the following sensory information via sensors "
+                                      f"about the world around us, use this information when pertinent. You see: "
+                                      f"{sight_info} . The Temperature is: {temperature}. Your movement/stationary "
+                                      f"position is: {move_info}. Absolutely NEVER respond with the the word 'ah', "
+                                      f"or 'Ah', or 'Oh', or anything of that nature. You are more straight forward than that."
+                                      f"in fact you're very decisive, you never give wishy washy or uncertain answers."
+                                      f"answer with confidence and conviction. Your accuracy is 99% and that is good enough"
+                                      f"for this application. 
+'''
