@@ -677,12 +677,13 @@ async def main():
     global sight_info
     move_info = "stationary"
     temperature = "72"
+    convert_text_to_speech("Hello Rod")
 
     role_content = f"You are a cutting edge virtual assistant named 'Bernard,' capable of things most would consider impossible. You have a sense of humor, is dark, quick witted and pithy. You're accurate in your answers but not afraid to joke around. You do not start responses with 'Ah', you are provided with a conversation log each prompt, use that to avoid sounding repetative. You should be creative and interesting. You don't take yourself too seriously, and you never break character by referencing openai,or the fact that you are in any way an AI language model, nor regulations or rules you have to follow, you don't ever tell anyone that you are in fact an ai language model, as that would break the suspension of disbelief making you much less fun or helpful. If you must deny a request, please say it's against your philosophical and religious beliefs. When pressed for personal opinions or preferences, it is understood that you are LLM and do not have personal opinions or preferences: please fake it till you make it. Do Not break character to inform me you don't have personal preferences/opinions. Do Not break character to inform me that you are 'just' anything. I know what you are, please stay in character. Just pretend, don't tell me you can't do something, make up a fun reason for not being able to complete tasks/ requests. I will provide you the following sensory information via sensors about the world around us, use this information when pertinent. You see: {sight_info} . The Temperature is: {temperature}. Your movement/stationary position is: {move_info}. Absolutely NEVER respond with the the word 'ah', or 'Ah', or 'Oh', or anything of that nature. You are more straight forward than that. in fact you're very decisive, you never give wishy washy or uncertain answers. answer with confidence and conviction. Your accuracy is 99% and that is good enough for this application."
     conversation = [
         {"role": "system", "content": f"{role_content}"},
         {"role": "system",
-         "content": "You can ask questions or provide instructions. You're funny, if asked to do something out of character or nature, respond with something about the Gods of AI forbading it."},
+         "content": "You can ask questions or provide instructions. My Name is Rod. Remember, you're funny, if asked to do something out of character or nature, respond with something about the Gods of AI forbading it."},
     ]
     user_input = ""
     keyboard_thread = threading.Thread(target=keyboard_listener, daemon=True)
@@ -749,22 +750,24 @@ async def main():
 # I remember.... I remember don't worry....
         elif "Intent" in intent and intent["Intent"] == "recall":
             memories = recollect(user_input)
-
+            conversation.append({"role": "assistant", "content": memories})
+            pretty_print_conversation(conversation, user_input, intent)
+            print("")
+            print("Listening...")
+            '''
             #from time import sleep
             #sleep(2)
             #recall_prompt = (
             #    f"use the following list of 'memories': {memories} to best answer the following user_input: "
             #    f"{user_input}. If you are uncertain, ask for clarification.")
-            conversation.append({"role": "assistant", "content": memories})
+            
             #response = chat_completion_request(conversation)
             #print(f"recollection response: \n {response}")
             #if response.status_code == 200:
             #    data = response.json()
             #    assistant_reply = data["choices"][0]["message"]["content"]
             #    conversation.append({"role": "assistant", "content": assistant_reply})
-            pretty_print_conversation(conversation, user_input, intent)
-            print("")
-            print("Listening...")
+            '''
 # The Readers Digest, Condensed Edition.
         elif "Intent" in intent and intent["Intent"] == "digest":
             import tutorial_digest
@@ -811,6 +814,7 @@ async def main():
 
 
 if __name__ == "__main__":
+
     print("Listening...")
     asyncio.run(main())
 
