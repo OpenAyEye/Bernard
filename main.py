@@ -87,7 +87,9 @@ load_dotenv("config.env")
 # Access the OpenAI key from the environment variable
 from openai import OpenAI
 openai.api_key = os.environ.get("OpenAiKey")
-client = OpenAI()
+client = OpenAI(
+    api_key=os.environ.get("OpenAiKey")
+)
 
 
 
@@ -747,19 +749,20 @@ async def main():
 # I remember.... I remember don't worry....
         elif "Intent" in intent and intent["Intent"] == "recall":
             memories = recollect(user_input)
-            from time import sleep
-            sleep(2)
-            recall_prompt = (
-                f"use the following list of 'memories': {memories} to best answer the following user_input: "
-                f"{user_input}. If you are uncertain, ask for clarification.")
-            conversation.append({"role": "assistant", "content": recall_prompt})
-            response = chat_completion_request(conversation)
-            print(f"recollection response: \n {response}")
-            if response.status_code == 200:
-                data = response.json()
-                assistant_reply = data["choices"][0]["message"]["content"]
-                conversation.append({"role": "assistant", "content": assistant_reply})
-                pretty_print_conversation(conversation, user_input, intent)
+
+            #from time import sleep
+            #sleep(2)
+            #recall_prompt = (
+            #    f"use the following list of 'memories': {memories} to best answer the following user_input: "
+            #    f"{user_input}. If you are uncertain, ask for clarification.")
+            conversation.append({"role": "assistant", "content": memories})
+            #response = chat_completion_request(conversation)
+            #print(f"recollection response: \n {response}")
+            #if response.status_code == 200:
+            #    data = response.json()
+            #    assistant_reply = data["choices"][0]["message"]["content"]
+            #    conversation.append({"role": "assistant", "content": assistant_reply})
+            pretty_print_conversation(conversation, user_input, intent)
             print("")
             print("Listening...")
 # The Readers Digest, Condensed Edition.
