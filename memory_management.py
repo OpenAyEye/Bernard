@@ -227,7 +227,7 @@ def delete_all_temp_files(client):
 
     # Iterate through the files and delete 'search_results_temp.txt'
     for file in files:
-        if file.filename == 'BernardBrain.csv':
+        if file.filename == 'BernardBrain.txt':
             try:
                 # Delete the file
                 client.files.delete(file.id)

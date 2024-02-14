@@ -349,14 +349,6 @@ def user_input_intent_detection(user_input):
     return json_obj
 
 
-
-
-
-
-
-
-
-
 ############################################ Assistant Functionality ###################################################
 
 ########## Check the Web #########
