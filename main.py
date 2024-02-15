@@ -170,22 +170,19 @@ def take_snapshot_and_save():
     save_path = "senses/vision/temp.jpg"
     print("bernard is looking:")
 
-    if os_name.lower() in ["linux", "linux2", "Linux", "Linux2"]:
+    if "linux" in os_name.lower():
         print("linux_image")
-        # This block is for Linux OS, using the PiCamera library
-        from picamera import PiCamera
-        import time
+        # Command to capture an image using libcamera-still
+        capture_command = ["libcamera-still", "-o", save_path]
 
-        camera = PiCamera()
         try:
-            camera.start_preview()
-            # Camera warm-up time
-            time.sleep(2)
-            camera.capture(save_path)
+            print("Starting camera preview...")
+            # Start the camera preview, wait for the camera to warm up, then capture the image
+            subprocess.run(capture_command, check=True)
             print(f"Snapshot saved to {save_path}")
             print("I've seen")
-        finally:
-            camera.close()
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to capture image: {e}")
     else:
         print("Windows Image")
         # This block is for Windows OS, using OpenCV
