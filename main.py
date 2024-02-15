@@ -165,6 +165,63 @@ functions = [
 import cv2
 
 def take_snapshot_and_save():
+    global os_name
+    # Define the save location and filename
+    save_path = "senses/vision/temp.jpg"
+    print("bernard is looking:")
+
+    if os_name.lower() in ["linux", "linux2"]:
+        print("linux_image")
+        # This block is for Linux OS, using the PiCamera library
+        from picamera import PiCamera
+        import time
+
+        camera = PiCamera()
+        try:
+            camera.start_preview()
+            # Camera warm-up time
+            time.sleep(2)
+            camera.capture(save_path)
+            print(f"Snapshot saved to {save_path}")
+            print("I've seen")
+        finally:
+            camera.close()
+    else:
+        print("Windows Image")
+        # This block is for Windows OS, using OpenCV
+
+        cap = cv2.VideoCapture(0)  # '0' is typically the default webcam
+
+        try:
+            if not cap.isOpened():
+                raise Exception("Error: Camera could not be accessed.")
+
+            # Capture a single frame
+            ret, frame = cap.read()
+
+            if not ret:
+                raise Exception("Error: No frame captured.")
+
+            # Save the captured frame to the specified path
+            cv2.imwrite(save_path, frame)
+            print(f"Snapshot saved to {save_path}")
+
+            # Display the captured frame
+            cv2.imshow('Snapshot', frame)
+            print("I've seen")
+            # cv2.waitKey(0)  # Wait indefinitely for a key press
+            import time
+            time.sleep(2)
+            cv2.destroyAllWindows()  # Close the image window
+
+
+        finally:
+            # Ensure the camera is released even if an error occurs
+            cap.release()
+
+        return save_path
+
+def take_snapshot_and_save_bak():
     # Define the save location and filename
     save_path = "senses/vision/temp.jpg"
     print("bernard is looking:")
