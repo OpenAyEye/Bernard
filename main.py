@@ -170,7 +170,7 @@ def take_snapshot_and_save():
     save_path = "senses/vision/temp.jpg"
     print("bernard is looking:")
 
-    if os_name.lower() in ["linux", "linux2"]:
+    if os_name.lower() in ["linux", "linux2", "Linux", "Linux2"]:
         print("linux_image")
         # This block is for Linux OS, using the PiCamera library
         from picamera import PiCamera
