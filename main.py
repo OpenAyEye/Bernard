@@ -181,6 +181,7 @@ def take_snapshot_and_save():
             subprocess.run(capture_command, check=True)
             print(f"Snapshot saved to {save_path}")
             print("I've seen")
+            return save_path
         except subprocess.CalledProcessError as e:
             print(f"Failed to capture image: {e}")
     else:
