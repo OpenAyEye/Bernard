@@ -10,8 +10,8 @@ from pydub import AudioSegment
 from pydub.playback import play
 import os
 from dotenv import load_dotenv
-import EdgeGPT.EdgeGPT
-from EdgeGPT import conversation_style
+#import EdgeGPT.EdgeGPT
+#from EdgeGPT import conversation_style
 import re
 import sqlite3
 import asyncio
@@ -219,42 +219,6 @@ def take_snapshot_and_save():
 
         return save_path
 
-def take_snapshot_and_save_bak():
-    # Define the save location and filename
-    save_path = "senses/vision/temp.jpg"
-    print("bernard is looking:")
-
-    # Start video capture from the first webcam device
-    cap = cv2.VideoCapture(0)  # '0' is typically the default webcam
-
-    try:
-        if not cap.isOpened():
-            raise Exception("Error: Camera could not be accessed.")
-
-        # Capture a single frame
-        ret, frame = cap.read()
-
-        if not ret:
-            raise Exception("Error: No frame captured.")
-
-        # Save the captured frame to the specified path
-        cv2.imwrite(save_path, frame)
-        print(f"Snapshot saved to {save_path}")
-
-        # Display the captured frame
-        cv2.imshow('Snapshot', frame)
-        print("I've seen")
-        #cv2.waitKey(0)  # Wait indefinitely for a key press
-        import time
-        time.sleep(2)
-        cv2.destroyAllWindows()  # Close the image window
-
-
-    finally:
-        # Ensure the camera is released even if an error occurs
-        cap.release()
-
-    return save_path
 
 
 
@@ -662,61 +626,6 @@ def recollect(user_input):
     import memory_management
     recollection = memory_management.main(user_input)
     return recollection
-def recollect_bak(user_input, intent=None):
-    # Extract keywords from the user's input using spaCy
-    user_keywords = extract_keywords(user_input, bot_response="")  # we're using the same keyword generation function
-    # as when we store memories, but when retrieving them we don't have an actual 'bot response' so we'll just pass a
-    # long an empty string, and won't affect the way the content is used to generate keywords for memory recollection.
-    print(f"key words in recollection:\n {user_keywords}")
-    # Combine the extracted keywords with intent (if provided)
-    all_keywords = set(user_keywords)
-    # Words to discard from the keywords
-    words_to_discard = ['bernard', 'remember', 'time', 'recall', 'recollect', 'conversation']
-    print("Cleaning Keywords")
-    for word in words_to_discard:
-        all_keywords.discard(word)
-        print(all_keywords)
-
-    #all_keywords.discard('bernard')
-    if intent:
-        all_keywords.add(intent)
-
-    # Connect to the SQLite database
-    conn = sqlite3.connect(memory_file)
-    c = conn.cursor()
-
-    # Prepare the SQL query with multiple conditions
-    sql_query = "SELECT memory_index, date, time, user_intent, user_input, bot_response FROM conversations WHERE "
-    conditions = []
-    for _ in all_keywords:
-        conditions.append("(keyword LIKE ? OR user_intent LIKE ?)")
-    sql_query += " OR ".join(conditions)
-
-    # Execute the SQL query with multiple keyword and intent conditions
-    c.execute(sql_query, tuple(
-        f"%{keyword}%" for keyword in all_keywords for _ in range(2)))  # Duplicate for both keyword and intent
-    rows = c.fetchall()
-
-    # Store the matching conversations in the memories dictionary
-    memories = {}
-    for row in rows:
-        memory_index, date, time, user_intent, user_input, bot_response = row
-        unique_key = f"{memory_index}_{user_input}"  # Use a unique key combining memory_index and user_input
-        memories[unique_key] = {
-            'memory_index': memory_index,
-            'date': date,
-            'time': time,
-            'user_intent': user_intent,
-            'user_input': user_input,
-            'bot_response': bot_response
-        }
-
-    conn.close()
-
-    # Print the memories to confirm they are working
-    print(f"these are the memories:\n {memories}")
-    return memories
-
 def get_sense_info():# maybe come back to this.
     from get_senses import get_vision
     sight_info = get_vision()
@@ -724,7 +633,7 @@ def get_sense_info():# maybe come back to this.
 
 
 
-
+use_keyboard = False
 
 ######################################################## Main Function #################################################
 
@@ -741,32 +650,40 @@ async def main():
          "content": "You can ask questions or provide instructions. My Name is Rod. Remember, you're funny, if asked to do something out of character or nature, respond with something about the Gods of AI forbading it."},
     ]
     user_input = ""
-    keyboard_thread = threading.Thread(target=keyboard_listener, daemon=True)
-    keyboard_thread.start()
+    #keyboard_thread = threading.Thread(target=keyboard_listener, daemon=True)
+    #keyboard_thread.start()
 
     while True:
-        if waiting_for_keyboard_input:
-            # Get typed input from the user
-            user_input = get_keyboard_input()
+        global use_keyboard
+        if use_keyboard:
+            user_input = input("Enter Prompt: ")
+            user_input = "bernard, " + user_input
         else:
-            # Existing code to get microphone input
+            print("Listening...")
             user_input = get_microphone_input()
 
         if "quit" in user_input.lower():
+            print("Quitting")
             break
-
+        elif "use keyboard" in user_input.lower():
+            print("Switching to keyboard input.")
+            use_keyboard = True
+        elif "use microphone" in user_input.lower():
+            print("Switching to microphone input.")
+            use_keyboard = False
+        else:
+            print("Input received: " + user_input)
+            # Place your input handling logic here
         user_message = {"role": "user", "content": user_input}
         conversation.append(user_message)
-        if "Bernard" in user_input:
+        if "bernard" in user_input.lower():
             print("User: " + user_input)
             intent = user_input_intent_detection(user_input)
         else:
-            #print("no bernard?")
+            # print("no bernard?")
             intent = "invalid"
 
-        #sight_info = get_sense_info()
-
-# Exit
+        # Exit
         if "Intent" in intent and intent["Intent"] == "exit":
             print("No problem. Goodbye!")
             convert_text_to_speech("No problem. Goodbye!")
@@ -870,7 +787,7 @@ async def main():
 
 if __name__ == "__main__":
 
-    print("Listening...")
+    #print("Listening...")
     asyncio.run(main())
 
 ''' back up stuff
@@ -899,4 +816,101 @@ You are a cutting edge virtual assistant named 'Bernard,' "
                                       f"in fact you're very decisive, you never give wishy washy or uncertain answers."
                                       f"answer with confidence and conviction. Your accuracy is 99% and that is good enough"
                                       f"for this application. 
+                                      
+                                      
+                                      
+
+def take_snapshot_and_save_bak():
+    # Define the save location and filename
+    save_path = "senses/vision/temp.jpg"
+    print("bernard is looking:")
+
+    # Start video capture from the first webcam device
+    cap = cv2.VideoCapture(0)  # '0' is typically the default webcam
+
+    try:
+        if not cap.isOpened():
+            raise Exception("Error: Camera could not be accessed.")
+
+        # Capture a single frame
+        ret, frame = cap.read()
+
+        if not ret:
+            raise Exception("Error: No frame captured.")
+
+        # Save the captured frame to the specified path
+        cv2.imwrite(save_path, frame)
+        print(f"Snapshot saved to {save_path}")
+
+        # Display the captured frame
+        cv2.imshow('Snapshot', frame)
+        print("I've seen")
+        #cv2.waitKey(0)  # Wait indefinitely for a key press
+        import time
+        time.sleep(2)
+        cv2.destroyAllWindows()  # Close the image window
+
+
+    finally:
+        # Ensure the camera is released even if an error occurs
+        cap.release()
+
+    return save_path
+    
+
+def recollect_bak(user_input, intent=None):
+    # Extract keywords from the user's input using spaCy
+    user_keywords = extract_keywords(user_input, bot_response="")  # we're using the same keyword generation function
+    # as when we store memories, but when retrieving them we don't have an actual 'bot response' so we'll just pass a
+    # long an empty string, and won't affect the way the content is used to generate keywords for memory recollection.
+    print(f"key words in recollection:\n {user_keywords}")
+    # Combine the extracted keywords with intent (if provided)
+    all_keywords = set(user_keywords)
+    # Words to discard from the keywords
+    words_to_discard = ['bernard', 'remember', 'time', 'recall', 'recollect', 'conversation']
+    print("Cleaning Keywords")
+    for word in words_to_discard:
+        all_keywords.discard(word)
+        print(all_keywords)
+
+    #all_keywords.discard('bernard')
+    if intent:
+        all_keywords.add(intent)
+
+    # Connect to the SQLite database
+    conn = sqlite3.connect(memory_file)
+    c = conn.cursor()
+
+    # Prepare the SQL query with multiple conditions
+    sql_query = "SELECT memory_index, date, time, user_intent, user_input, bot_response FROM conversations WHERE "
+    conditions = []
+    for _ in all_keywords:
+        conditions.append("(keyword LIKE ? OR user_intent LIKE ?)")
+    sql_query += " OR ".join(conditions)
+
+    # Execute the SQL query with multiple keyword and intent conditions
+    c.execute(sql_query, tuple(
+        f"%{keyword}%" for keyword in all_keywords for _ in range(2)))  # Duplicate for both keyword and intent
+    rows = c.fetchall()
+
+    # Store the matching conversations in the memories dictionary
+    memories = {}
+    for row in rows:
+        memory_index, date, time, user_intent, user_input, bot_response = row
+        unique_key = f"{memory_index}_{user_input}"  # Use a unique key combining memory_index and user_input
+        memories[unique_key] = {
+            'memory_index': memory_index,
+            'date': date,
+            'time': time,
+            'user_intent': user_intent,
+            'user_input': user_input,
+            'bot_response': bot_response
+        }
+
+    conn.close()
+
+    # Print the memories to confirm they are working
+    print(f"these are the memories:\n {memories}")
+    return memories
+
 '''
