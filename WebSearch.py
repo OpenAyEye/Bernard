@@ -36,13 +36,16 @@ def scrape_content(url):
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
     }
     try:
+        print("Trying Scrape")
         response = requests.get(url, headers=headers)
         response.raise_for_status()
+        print(f"Scrape Response:\n {response.content}")
     except requests.RequestException as e:
         print(f"Request failed: {e}")
         return ""
-
+    print("Parsing:\n")
     soup = BeautifulSoup(response.content, 'html.parser')
+    print(f"soup says:\{soup}")
     print("Finished Scraping w/ b4")
     return soup.get_text()
 
@@ -307,7 +310,7 @@ def main(search_query):
 
 
 if __name__ == "__main__":
-    search_query = "what movies are playing in houghton michigan today? 1/4/2024"  # input("Enter your search query: ")
+    search_query = "what movies are playing in dallas michigan today? 1/4/2024"  # input("Enter your search query: ")
     search_results_path = 'search_results_temp.txt'
     response = main(search_query)
     print(f"The Response\n {response}")
